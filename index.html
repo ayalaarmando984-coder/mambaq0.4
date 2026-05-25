@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MAMBAQ – Museo de Arte Moderno de Barranquilla</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<div class="phone-wrap">
+  <div class="phone">
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: HOME
+    ══════════════════════════════════════════ -->
+    <div class="screen active" id="screen-home">
+      <div class="topbar">
+        <div class="logo-block">
+          <div class="logo-icon">🎨</div>
+          <div>
+            <div class="logo-text">MAMBAQ</div>
+            <div class="logo-sub">Museo de arte moderno de Barranquilla</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="fredoka title-lg" style="margin-bottom:8px">
+          ¡Convierte tu dibujo<br/>en una obra de arte!
+        </div>
+        <p class="subtitle" style="margin-bottom:24px">
+          Toma una foto de tu dibujo y lo transformamos al estilo de los grandes maestros 🖌️
+        </p>
+        <button class="btn-primary" onclick="go('camera')" style="margin-bottom:14px">
+          📸 ¡Comenzar!
+        </button>
+        <div class="home-grid">
+          <div class="card card-nav" onclick="go('museo')">
+            <div class="card-icon">🏛️</div>
+            <div class="card-nav-title">Museo</div>
+            <div class="card-nav-sub">Interactivo</div>
+          </div>
+          <div class="card card-nav" onclick="go('conocenos')">
+            <div class="card-icon">ℹ️</div>
+            <div class="card-nav-title">Conócenos</div>
+            <div class="card-nav-sub">Sobre el MAMBAQ</div>
+          </div>
+        </div>
+        <div id="home-recents" style="margin-top:20px;display:none">
+          <div class="section-label">Últimas obras 🌟</div>
+          <div class="recents-row" id="home-recents-list"></div>
+        </div>
+      </div>
+      <svg class="wave" viewBox="0 0 390 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C60,10 120,70 180,40 C240,10 300,70 390,30 L390,90 L0,90 Z" fill="#C4612A" opacity="0.9"/>
+        <path d="M0,55 C80,25 140,80 220,50 C300,20 350,65 390,45 L390,90 L0,90 Z" fill="#E07840" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: CAMERA
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-camera">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('home')">←</button>
+        <div class="fredoka topbar-title">Tu dibujo</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body centered">
+        <div class="fredoka title-md" style="text-align:center;margin-bottom:16px">
+          ¡Convierte tu dibujo<br/>en una obra de arte!
+        </div>
+        <div class="camera-box" id="camera-preview-box">
+          <div id="camera-placeholder">
+            <div style="font-size:56px;margin-bottom:10px">📷</div>
+            <div class="camera-hint">Aquí aparecerá tu dibujo</div>
+          </div>
+          <img id="camera-preview-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px"/>
+        </div>
+        <input type="file" id="file-input-camera"  accept="image/*" capture="environment" style="display:none"/>
+        <input type="file" id="file-input-gallery" accept="image/*" style="display:none"/>
+        <button class="btn-primary" onclick="triggerCamera()" style="margin-bottom:10px">
+          📷 TOMAR FOTO
+        </button>
+        <button class="btn-ghost" onclick="triggerGallery()">
+          🖼️ elegir de la galería
+        </button>
+      </div>
+      <svg class="wave" viewBox="0 0 390 80" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,35 C70,8 140,65 220,35 C300,5 360,55 390,25 L390,80 L0,80 Z" fill="#C8870E" opacity="0.7"/>
+        <path d="M0,50 C90,25 160,70 250,42 C330,15 370,60 390,40 L390,80 L0,80 Z" fill="#E6A020" opacity="0.45"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: FORM  (+ campo edad)
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-form">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('camera')">←</button>
+        <div class="fredoka topbar-title">Tu pequeña obra</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body">
+        <div class="fredoka title-md" style="margin-bottom:20px">
+          Cuéntanos sobre tu<br/>Pequeña obra
+        </div>
+        <div class="form-group">
+          <label class="field-label">Nombre tu pequeña arte:</label>
+          <input class="input-field" type="text" id="input-name" placeholder="La Naturaleza"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Nombre del autor</label>
+          <input class="input-field" type="text" id="input-author" placeholder="Tu nombre"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Edad del autor</label>
+          <input class="input-field" type="number" id="input-age" placeholder="Ej: 5" min="1" max="17"
+            style="width:140px"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Estilo artístico</label>
+          <div class="select-wrap">
+            <div class="style-dot" id="style-dot"></div>
+            <select class="input-field select-field" id="input-style" onchange="updateStyleDot()">
+              <option value="vangogh"  data-color="#2a5298">Van Gogh</option>
+              <option value="picasso"  data-color="#8b2252">Pablo Picasso</option>
+              <option value="monet"    data-color="#5b9e8f">Claude Monet</option>
+              <option value="frida"    data-color="#c0392b">Frida Kahlo</option>
+              <option value="davinci"  data-color="#8b6914">Leonardo da Vinci</option>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="submitForm()" style="margin-top:20px">
+          Continuar
+        </button>
+      </div>
+      <svg class="wave" viewBox="0 0 390 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C60,10 120,70 180,40 C240,10 300,70 390,30 L390,90 L0,90 Z" fill="#C4612A" opacity="0.9"/>
+        <path d="M0,55 C80,25 140,80 220,50 C300,20 350,65 390,45 L390,90 L0,90 Z" fill="#E07840" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: PREVIEW
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-preview">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('form')">←</button>
+        <div class="fredoka topbar-title">Vista previa</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body centered">
+        <div class="fredoka title-md" style="text-align:center;margin-bottom:16px">
+          VISTA DE TU<br/>PEQUEÑA OBRA
+        </div>
+        <div style="width:240px;height:240px;border-radius:24px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+          <img id="preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <div class="card" style="width:100%;margin-bottom:18px">
+          <div class="info-row">Arte: <b id="preview-name">—</b></div>
+          <div class="info-row">Autor: <b id="preview-author">—</b></div>
+          <div class="info-row">Edad: <b id="preview-age">—</b></div>
+          <div class="info-row" style="display:flex;align-items:center;gap:8px">
+            Estilo: <span class="style-badge" id="preview-style-badge">—</span>
+          </div>
+        </div>
+        <button class="btn-ghost" onclick="go('camera')" style="margin-bottom:10px;width:100%">
+          ↩ Volver a tomar la foto
+        </button>
+        <button class="btn-primary" onclick="go('processing')">
+          Continuar
+        </button>
+      </div>
+      <svg class="wave" viewBox="0 0 390 70" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,30 C80,5 150,55 240,25 C310,0 360,45 390,20 L390,70 L0,70 Z" fill="#7AAE89" opacity="0.8"/>
+        <path d="M0,45 C70,20 160,65 250,35 C330,10 370,55 390,35 L390,70 L0,70 Z" fill="#4D8060" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: PROCESSING
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-processing" style="justify-content:center;align-items:center">
+      <div class="processing-wrap">
+        <div class="fredoka" style="font-size:22px;color:var(--brown);margin-bottom:20px">MAMBAQ</div>
+        <div class="processing-img-wrap">
+          <img id="proc-img-before" src="" alt="" class="proc-img"/>
+          <img id="proc-img-after"  src="" alt="" class="proc-img hidden"/>
+        </div>
+        <div id="proc-loading">
+          <div style="font-size:38px;animation:spin 1.5s linear infinite;margin-bottom:8px">⚙️</div>
+          <div class="fredoka" style="font-size:18px;color:var(--brown);text-align:center">ESPERA UN MOMENTO..</div>
+          <div id="proc-style-label" style="font-size:13px;color:var(--warm-gray);font-weight:600;text-align:center;margin-top:4px"></div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+        </div>
+        <div id="proc-done" class="hidden" style="text-align:center;animation:slideUp .4s ease">
+          <div style="font-size:48px;animation:pop .5s ease">✨</div>
+          <div class="fredoka" style="font-size:20px;color:var(--brown);margin:8px 0">¡Lista!</div>
+          <button class="btn-primary" onclick="finishProcessing()">Ver mi obra</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: RESULT
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-result">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('home')">←</button>
+        <div class="fredoka topbar-title">¡Tu obra!</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body centered">
+        <div class="fredoka title-md" style="text-align:center;margin-bottom:14px">
+          🎉 ¡Así quedó<br/>tu Imagen!
+        </div>
+        <div style="width:240px;height:240px;border-radius:24px;overflow:hidden;margin-bottom:14px;box-shadow:0 12px 40px rgba(0,0,0,0.18)">
+          <img id="result-img" src="" alt="" style="width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <div class="card" style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div class="style-circle" id="result-style-circle"></div>
+          <div>
+            <div style="font-size:12px;color:var(--warm-gray);font-weight:600">Estilo Aplicado:</div>
+            <div style="font-size:16px;font-weight:800;color:var(--brown)" id="result-style-name"></div>
+          </div>
+        </div>
+        <button class="btn-secondary" style="margin-bottom:10px;width:100%">
+          💾 Guardar imagen
+        </button>
+        <button class="btn-ghost" style="margin-bottom:10px;width:100%">
+          ↗ Compartir
+        </button>
+        <button class="btn-primary" onclick="registerArtwork()">
+          Registrar en el museo →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: SUCCESS
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-success" style="justify-content:center">
+      <div class="screen-body centered" style="padding-top:40px">
+        <div class="fredoka title-lg" style="text-align:center;margin-bottom:10px">
+          ¡Tu obra fue<br/>registrada con<br/>éxito!
+        </div>
+        <div style="font-size:52px;margin-bottom:24px;animation:pop .6s ease">❤️</div>
+        <div class="card" style="width:100%;margin-bottom:24px">
+          <div class="info-row">Nombre: <b id="success-name">—</b></div>
+          <div class="info-row">Autor: <b id="success-author">—</b></div>
+          <div class="info-row">Edad: <b id="success-age">—</b></div>
+          <div class="info-row" style="display:flex;align-items:center;gap:8px">
+            Estilo: <span class="style-badge" id="success-style-badge">—</span>
+          </div>
+        </div>
+        <button class="btn-secondary" onclick="go('museo')" style="width:100%;margin-bottom:10px">
+          Ver en el Museo Interactivo →
+        </button>
+        <button class="btn-ghost" onclick="go('home')" style="width:100%">
+          Volver al inicio
+        </button>
+      </div>
+      <svg class="wave" viewBox="0 0 390 70" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,30 C80,5 150,55 240,25 C310,0 360,45 390,20 L390,70 L0,70 Z" fill="#7AAE89" opacity="0.8"/>
+        <path d="M0,45 C70,20 160,65 250,35 C330,10 370,55 390,35 L390,70 L0,70 Z" fill="#4D8060" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: MUSEO INTERACTIVO
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-museo">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('home')">←</button>
+        <div class="fredoka topbar-title" style="text-align:center;flex:1">Museo<br/>Interactivo</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body" style="padding-top:0">
+        <div class="tabs-row">
+          <button class="tab active" id="tab-todas"     onclick="setTab('todas')">Todas</button>
+          <button class="tab"        id="tab-recientes" onclick="setTab('recientes')">Recientes</button>
+          <button class="tab"        id="tab-populares" onclick="setTab('populares')">Populares</button>
+        </div>
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: ARTWORK DETAIL
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-artwork">
+      <div class="topbar">
+        <button class="back-btn" onclick="go('museo')">←</button>
+        <div class="fredoka topbar-title">Obra de arte</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body">
+        <div style="width:100%;aspect-ratio:1;border-radius:24px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+          <div id="artwork-thumb-big" style="width:100%;height:100%"></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="fredoka" style="font-size:22px;color:var(--brown);margin-bottom:10px" id="artwork-detail-name"></div>
+          <div class="info-row">Autor: <b id="artwork-detail-author"></b></div>
+          <div class="info-row" id="artwork-detail-age-wrap">Edad: <b id="artwork-detail-age"></b></div>
+          <div class="info-row" style="display:flex;align-items:center;gap:8px">
+            Estilo: <span class="style-badge" id="artwork-detail-style"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn-ghost" style="flex:1">❤️ Me gusta</button>
+          <button class="btn-secondary" style="flex:1">↗ Compartir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: CONÓCENOS
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-conocenos">
+      <div class="topbar">
+        <div style="font-size:22px;cursor:pointer;color:var(--brown)">☰</div>
+        <div class="fredoka topbar-title">MAMBAQ</div>
+        <button class="home-btn" onclick="go('home')">🏠</button>
+      </div>
+      <div class="screen-body">
+        <div class="fredoka title-md" style="margin-bottom:20px">Conócenos</div>
+        <div class="card conocenos-card">
+          <div class="conocenos-icon">🏛️</div>
+          <div class="conocenos-body">
+            <div class="conocenos-title">Sobre el museo</div>
+            <div class="conocenos-text">El MAMBAQ es el museo de Arte Moderno de Barranquilla. Un lugar para descubrir, aprender y crear.</div>
+          </div>
+          <div class="conocenos-arrow">→</div>
+        </div>
+        <div class="card conocenos-card">
+          <div class="conocenos-icon">🎓</div>
+          <div class="conocenos-body">
+            <div class="conocenos-title">Nuestra misión</div>
+            <div class="conocenos-text">Acercar el arte moderno a niños y familias de Barranquilla de forma lúdica e interactiva.</div>
+          </div>
+          <div class="conocenos-arrow">→</div>
+        </div>
+        <div class="card conocenos-card">
+          <div class="conocenos-icon">👤</div>
+          <div class="conocenos-body">
+            <div class="conocenos-title">Para todos</div>
+            <div class="conocenos-text">Un espacio inclusivo donde cada niño puede convertirse en un pequeño artista.</div>
+          </div>
+          <div class="conocenos-arrow">→</div>
+        </div>
+      </div>
+      <div class="conocenos-footer">
+        <span style="font-size:28px">❤️</span>
+        <span>Gracias por ser parte de esta experiencia</span>
+      </div>
+    </div>
+
+  </div><!-- /phone -->
+</div><!-- /phone-wrap -->
+
+<script src="js/app.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/museo.js"></script>
+</body>
+</html>
