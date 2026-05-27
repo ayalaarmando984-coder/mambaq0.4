@@ -49,7 +49,7 @@ Para probar en móvil, puedes subir el proyecto a **GitHub Pages**:
 
 ---
 
-## 🎨 Estilos artísticos disponibles
+## 🎨 Estilos artísticos disponibles.
 
 - Van Gogh
 - Pablo Picasso
