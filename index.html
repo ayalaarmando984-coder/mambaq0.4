@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="css/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
 </head>
 <body>
 
@@ -17,9 +19,9 @@
   <div class="phone">
 
     <!-- ══════════════════════════════════════════
-         SCREEN: HOME
+         SCREEN: LOGIN (acceso infantil — nombre + avatar)
     ══════════════════════════════════════════ -->
-    <div class="screen active" id="screen-home">
+    <div class="screen active" id="screen-login">
       <div class="topbar">
         <div class="logo-block">
           <div class="logo-icon">🎨</div>
@@ -30,8 +32,57 @@
         </div>
       </div>
       <div class="screen-body">
+        <div class="fredoka title-lg" style="margin-bottom:6px;text-align:center">
+          ¡Hola, peque artista!
+        </div>
+        <p class="subtitle" style="margin-bottom:18px;text-align:center">
+          Dinos quién eres para guardar tus obras 💛
+        </p>
+
+        <div class="form-group">
+          <label class="field-label">¿Cómo te llamas?</label>
+          <input class="input-field" type="text" id="login-name" placeholder="Mi nombre" maxlength="20"/>
+        </div>
+
+        <label class="field-label">Elige tu avatar</label>
+        <div class="avatar-grid" id="avatar-grid"></div>
+
+        <button class="btn-primary" id="login-submit" onclick="loginSubmit()" style="margin-top:8px">
+          ¡Soy yo! 🌟
+        </button>
+
+        <div id="login-existing" style="display:none;margin-top:14px">
+          <div class="section-label" style="text-align:center">¿Ya jugaste antes?</div>
+          <div class="existing-users" id="existing-users-list"></div>
+        </div>
+      </div>
+      <svg class="wave" viewBox="0 0 390 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C60,10 120,70 180,40 C240,10 300,70 390,30 L390,90 L0,90 Z" fill="#C4612A" opacity="0.9"/>
+        <path d="M0,55 C80,25 140,80 220,50 C300,20 350,65 390,45 L390,90 L0,90 Z" fill="#E07840" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN: HOME
+    ══════════════════════════════════════════ -->
+    <div class="screen" id="screen-home">
+      <div class="topbar">
+        <div class="logo-block">
+          <div class="logo-icon">🎨</div>
+          <div>
+            <div class="logo-text">MAMBAQ</div>
+            <div class="logo-sub">Museo de arte moderno de Barranquilla</div>
+          </div>
+        </div>
+        <button class="profile-chip" id="profile-chip" onclick="openProfileMenu()" title="Cambiar de usuario">
+          <span id="profile-chip-avatar">🦄</span>
+          <span id="profile-chip-name">—</span>
+        </button>
+      </div>
+      <div class="screen-body">
         <div class="fredoka title-lg" style="margin-bottom:8px">
-          ¡Convierte tu dibujo<br/>en una obra de arte!
+          <span id="home-greeting">¡Hola!</span><br/>
+          ¡Convierte tu dibujo en arte!
         </div>
         <p class="subtitle" style="margin-bottom:24px">
           Toma una foto de tu dibujo y lo transformamos al estilo de los grandes maestros 🖌️
@@ -52,7 +103,7 @@
           </div>
         </div>
         <div id="home-recents" style="margin-top:20px;display:none">
-          <div class="section-label">Últimas obras 🌟</div>
+          <div class="section-label" id="home-recents-title">Mis obras 🌟</div>
           <div class="recents-row" id="home-recents-list"></div>
         </div>
       </div>
@@ -138,16 +189,12 @@
           Cuéntanos sobre tu<br/>Pequeña obra
         </div>
         <div class="form-group">
-          <label class="field-label">Nombre tu pequeña arte:</label>
+          <label class="field-label">Nombre de tu pequeña obra:</label>
           <input class="input-field" type="text" id="input-name" placeholder="La Naturaleza"/>
         </div>
         <div class="form-group">
-          <label class="field-label">Nombre del autor</label>
-          <input class="input-field" type="text" id="input-author" placeholder="Tu nombre"/>
-        </div>
-        <div class="form-group">
-          <label class="field-label">Edad del autor</label>
-          <input class="input-field" type="number" id="input-age" placeholder="Ej: 5" min="1" max="17"
+          <label class="field-label">Tu edad</label>
+          <input class="input-field" type="number" id="input-age" placeholder="Ej: 5" min="3" max="12"
             style="width:140px"/>
         </div>
         <div class="form-group">
@@ -260,10 +307,10 @@
             <div style="font-size:16px;font-weight:800;color:var(--brown)" id="result-style-name"></div>
           </div>
         </div>
-        <button class="btn-secondary" style="margin-bottom:10px;width:100%">
+        <button class="btn-secondary" onclick="downloadResult()" style="margin-bottom:10px;width:100%">
           💾 Guardar imagen
         </button>
-        <button class="btn-ghost" style="margin-bottom:10px;width:100%">
+        <button class="btn-ghost" onclick="shareResult()" style="margin-bottom:10px;width:100%">
           ↗ Compartir
         </button>
         <button class="btn-primary" onclick="registerArtwork()">
@@ -343,8 +390,8 @@
           </div>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn-ghost" style="flex:1">❤️ Me gusta</button>
-          <button class="btn-secondary" style="flex:1">↗ Compartir</button>
+          <button class="btn-ghost" id="artwork-like-btn" onclick="toggleArtworkLike()" style="flex:1">❤️ <span id="artwork-like-count">0</span></button>
+          <button class="btn-secondary" onclick="shareArtwork()" style="flex:1">↗ Compartir</button>
         </div>
       </div>
     </div>
@@ -391,9 +438,18 @@
       </div>
     </div>
 
+    <!-- Overlay de carga (para operaciones async largas) -->
+    <div class="mambaq-loader" id="mambaq-loader" hidden>
+      <div class="mambaq-loader-box">
+        <div class="mambaq-loader-spinner"></div>
+        <div class="mambaq-loader-text" id="mambaq-loader-text">Guardando…</div>
+      </div>
+    </div>
+
   </div><!-- /phone -->
 </div><!-- /phone-wrap -->
 
+<script src="js/db.js"></script>
 <script src="js/app.js"></script>
 <script src="js/camera.js"></script>
 <script src="js/museo.js"></script>
