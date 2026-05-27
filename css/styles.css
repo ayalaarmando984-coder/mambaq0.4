@@ -402,3 +402,110 @@ body {
 
 /* ── Utilities ──────────────────────────────────────────── */
 .hidden { display: none !important; }
+
+/* ── AI Detection Banner ────────────────────────────────────────────────────── */
+.ai-banner {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-radius: 18px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  border: 2px solid transparent;
+  animation: slideUp .35s ease;
+  text-align: center;
+}
+.ai-banner.ai-drawing {
+  background: #eaf7ee;
+  border-color: #7AAE89;
+}
+.ai-banner.ai-photo {
+  background: #fff3e0;
+  border-color: #C8870E;
+}
+.ai-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#ai-icon { font-size: 28px; }
+#ai-label {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  color: var(--brown);
+}
+#ai-confidence {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--warm-gray);
+}
+#ai-warning {
+  display: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terra);
+  background: #fff3e0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  width: 100%;
+}
+
+/* spinner de análisis */
+.ai-spinner {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warm-gray);
+}
+.ai-spinner-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: pulse 1s ease-in-out infinite;
+}
+.ai-spinner-dot:nth-child(2) { animation-delay: .2s; }
+.ai-spinner-dot:nth-child(3) { animation-delay: .4s; }
+
+/* botón continuar (debajo del banner) */
+#ai-continue-btn { display: none; width: 100%; }
+
+/* confidence bar inside banner */
+.conf-bar-wrap {
+  width: 100%;
+  background: rgba(0,0,0,0.08);
+  border-radius: 20px;
+  height: 7px;
+  overflow: hidden;
+}
+.conf-bar {
+  height: 100%;
+  border-radius: 20px;
+  background: var(--sage);
+  transition: width .5s ease;
+}
+.ai-banner.ai-photo .conf-bar { background: var(--amber); }
+
+/* ── Foto bloqueada: banner más prominente ───────────────────────────────────── */
+.ai-banner.ai-photo {
+  background: #fff0f0;
+  border-color: #e05050;
+}
+.ai-banner.ai-photo #ai-label {
+  color: #c0392b;
+}
+.ai-banner.ai-photo .conf-bar { background: #e05050; }
+.ai-banner.ai-photo #ai-warning {
+  background: #fde8e8;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c0392b;
+  width: 100%;
+  text-align: center;
+}
