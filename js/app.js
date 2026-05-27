@@ -7,16 +7,32 @@ const STYLES = {
   davinci: { label: "Leonardo da Vinci", color: "#8b6914", filter: "sepia(0.8) contrast(1.1) brightness(0.95)" },
 };
 
-// ── Estado global ────────────────────────────────────────────────────────────
+// ── Avatares disponibles ────────────────────────────────────────────────────
+const AVATARS = ["🐱","🐶","🦄","🐸","🐼","🦊","🐙","🐯","🦖","🐧","🐵","🦁"];
+
+// ── Estado global ───────────────────────────────────────────────────────────
 const state = {
+  currentUser: null,
+  selectedAvatar: "🦄",
   captureDataUrl: null,
   form: { name: "", author: "", age: "", styleKey: "vangogh" },
-  artworks: [],
   selectedArtwork: null,
 };
 
-// ── Navegación ───────────────────────────────────────────────────────────────
-function go(screenId) {
+// ── Loader helper ───────────────────────────────────────────────────────────
+function showLoader(text) {
+  const el = document.getElementById("mambaq-loader");
+  const tx = document.getElementById("mambaq-loader-text");
+  if (tx && text) tx.textContent = text;
+  if (el) el.hidden = false;
+}
+function hideLoader() {
+  const el = document.getElementById("mambaq-loader");
+  if (el) el.hidden = true;
+}
+
+// ── Navegación ──────────────────────────────────────────────────────────────
+async function go(screenId) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const target = document.getElementById("screen-" + screenId);
   if (!target) return console.warn("Pantalla no encontrada:", screenId);
@@ -26,43 +42,197 @@ function go(screenId) {
   if (screenId === "processing") startProcessing();
   if (screenId === "result")     renderResult();
   if (screenId === "success")    renderSuccess();
-  if (screenId === "museo")      renderMuseo();
-  if (screenId === "home")       renderHomeRecents();
+  if (screenId === "museo")      await renderMuseo();
+  if (screenId === "home")       await renderHome();
+  if (screenId === "login")      await renderLogin();
 }
 
-// ── Inicialización ───────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
+// ── Bootstrap ───────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", async () => {
   updateStyleDot();
+
+  if (!window.db?.isReady) {
+    alert("⚠️  Supabase no está configurado.\n\nEdita js/config.js con tu Project URL y anon key.\nLuego recarga la página.");
+    await go("login");
+    return;
+  }
+
+  showLoader("Cargando…");
+  try {
+    const user = await db.session.currentUser();
+    if (user) {
+      state.currentUser = user;
+      await go("home");
+    } else {
+      await go("login");
+    }
+  } finally {
+    hideLoader();
+  }
 });
 
-// ── Formulario ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  LOGIN INFANTIL
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function renderLogin() {
+  const grid = document.getElementById("avatar-grid");
+  grid.innerHTML = "";
+  AVATARS.forEach(av => {
+    const btn = document.createElement("button");
+    btn.className   = "avatar-option" + (av === state.selectedAvatar ? " selected" : "");
+    btn.textContent = av;
+    btn.type        = "button";
+    btn.onclick     = () => selectAvatar(av);
+    grid.appendChild(btn);
+  });
+
+  const existing = await db.users.list();
+  const wrap = document.getElementById("login-existing");
+  const list = document.getElementById("existing-users-list");
+  if (!existing.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+  list.innerHTML = "";
+  existing.slice(0, 6).forEach(u => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "existing-user-chip";
+    chip.innerHTML = `<span class="eu-av">${u.avatar}</span><span class="eu-name">${u.name}</span>`;
+    chip.onclick = () => loginAsExisting(u.id);
+    list.appendChild(chip);
+  });
+}
+
+function selectAvatar(av) {
+  state.selectedAvatar = av;
+  document.querySelectorAll(".avatar-option").forEach(el => {
+    el.classList.toggle("selected", el.textContent === av);
+  });
+}
+
+async function loginSubmit() {
+  const name = document.getElementById("login-name").value.trim();
+  if (!name) { alert("Escribe tu nombre, peque artista 💛"); return; }
+
+  showLoader("Creando tu perfil…");
+  try {
+    const user = await db.users.create({ name, avatar: state.selectedAvatar });
+    db.session.set(user.id);
+    state.currentUser = user;
+    await go("home");
+  } catch (e) {
+    console.error(e);
+    alert("No se pudo crear el perfil. Revisa la conexión.");
+  } finally {
+    hideLoader();
+  }
+}
+
+async function loginAsExisting(userId) {
+  showLoader("Entrando…");
+  try {
+    const user = await db.users.get(userId);
+    if (!user) return;
+    db.session.set(user.id);
+    state.currentUser = user;
+    await go("home");
+  } finally {
+    hideLoader();
+  }
+}
+
+async function openProfileMenu() {
+  if (!confirm("¿Cambiar de pequeño artista?")) return;
+  db.session.clear();
+  state.currentUser = null;
+  await go("login");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function renderHome() {
+  const chip  = document.getElementById("profile-chip");
+  const avEl  = document.getElementById("profile-chip-avatar");
+  const nmEl  = document.getElementById("profile-chip-name");
+  const greet = document.getElementById("home-greeting");
+
+  if (state.currentUser) {
+    chip.style.display = "flex";
+    avEl.textContent   = state.currentUser.avatar;
+    nmEl.textContent   = state.currentUser.name;
+    greet.textContent  = "¡Hola, " + state.currentUser.name + "!";
+  } else {
+    chip.style.display = "none";
+    greet.textContent  = "¡Hola!";
+  }
+
+  await renderHomeRecents();
+}
+
+async function renderHomeRecents() {
+  const wrap  = document.getElementById("home-recents");
+  const list  = document.getElementById("home-recents-list");
+  const title = document.getElementById("home-recents-title");
+
+  if (!state.currentUser) { wrap.style.display = "none"; return; }
+
+  const mine = await db.artworks.byChild(state.currentUser.id);
+  if (!mine.length) { wrap.style.display = "none"; return; }
+
+  wrap.style.display = "block";
+  if (title) title.textContent = "Mis obras 🌟";
+  list.innerHTML = "";
+  mine.slice(0, 6).forEach(art => {
+    const div = document.createElement("div");
+    div.className = "recent-thumb";
+    div.onclick = () => { state.selectedArtwork = art; go("artwork"); };
+    div.innerHTML = art.imgSrc
+      ? `<img class="recent-thumb-img" src="${art.imgSrc}" style="filter:${art.filter}" alt="${art.name}"/>
+         <div class="recent-label">${art.name}</div>`
+      : `<div class="recent-thumb-placeholder" style="background:${art.color}44">${art.emoji}</div>
+         <div class="recent-label">${art.name}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  FORMULARIO
+// ═══════════════════════════════════════════════════════════════════════════
+
 function updateStyleDot() {
   const sel = document.getElementById("input-style");
   const dot = document.getElementById("style-dot");
-  const key = sel ? sel.value : "vangogh";
+  if (!sel || !dot) return;
+  const key = sel.value || "vangogh";
   dot.style.background = STYLES[key]?.color || "#2a5298";
 }
 
 function submitForm() {
-  const name   = document.getElementById("input-name").value.trim();
-  const author = document.getElementById("input-author").value.trim();
-  const age    = document.getElementById("input-age").value.trim();
-  const key    = document.getElementById("input-style").value;
+  const name = document.getElementById("input-name").value.trim();
+  const age  = document.getElementById("input-age").value.trim();
+  const key  = document.getElementById("input-style").value;
 
-  if (!name || !author) {
-    alert("Por favor completa el nombre de la obra y el autor 🎨");
-    return;
-  }
-  if (!age || isNaN(age) || +age < 1 || +age > 17) {
-    alert("Por favor ingresa una edad válida (1 a 17 años) 🎈");
+  if (!name) { alert("Ponle un nombre a tu obra 🎨"); return; }
+  if (!age || isNaN(age) || +age < 3 || +age > 12) {
+    alert("Por favor escribe una edad entre 3 y 12 🎈");
     return;
   }
 
-  state.form = { name, author, age: +age, styleKey: key };
+  state.form = {
+    name,
+    author: state.currentUser?.name || "Anónimo",
+    age: +age,
+    styleKey: key,
+  };
   go("preview");
 }
 
-// ── Preview ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  PREVIEW / RESULT / SUCCESS
+// ═══════════════════════════════════════════════════════════════════════════
+
 function renderPreview() {
   const { name, author, age, styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
@@ -77,7 +247,6 @@ function renderPreview() {
   badge.style.background = style.color;
 }
 
-// ── Result ───────────────────────────────────────────────────────────────────
 function renderResult() {
   const { styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
@@ -90,29 +259,6 @@ function renderResult() {
   document.getElementById("result-style-name").textContent        = style.label;
 }
 
-// ── Registrar obra ───────────────────────────────────────────────────────────
-function registerArtwork() {
-  const { name, author, age, styleKey } = state.form;
-  const style = STYLES[styleKey] || STYLES.vangogh;
-
-  state.artworks.unshift({
-    id:       Date.now(),
-    name,
-    author,
-    age,
-    style:    style.label,
-    styleKey,
-    color:    style.color,
-    filter:   style.filter,
-    imgSrc:   state.captureDataUrl,
-    emoji:    "✨",
-    date:     new Date(),
-  });
-
-  go("success");
-}
-
-// ── Success ──────────────────────────────────────────────────────────────────
 function renderSuccess() {
   const { name, author, age, styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
@@ -126,28 +272,100 @@ function renderSuccess() {
   badge.style.background = style.color;
 }
 
-// ── Home recents ─────────────────────────────────────────────────────────────
-function renderHomeRecents() {
-  const wrap = document.getElementById("home-recents");
-  const list = document.getElementById("home-recents-list");
-  if (state.artworks.length === 0) { wrap.style.display = "none"; return; }
+// ═══════════════════════════════════════════════════════════════════════════
+//  REGISTRAR OBRA
+// ═══════════════════════════════════════════════════════════════════════════
 
-  wrap.style.display = "block";
-  list.innerHTML = "";
-  state.artworks.slice(0, 5).forEach(art => {
-    const div = document.createElement("div");
-    div.className = "recent-thumb";
-    div.onclick = () => { state.selectedArtwork = art; go("artwork"); };
+async function registerArtwork() {
+  if (!state.currentUser) { await go("login"); return; }
+  const { name, author, age, styleKey } = state.form;
+  const style = STYLES[styleKey] || STYLES.vangogh;
 
-    if (art.imgSrc) {
-      div.innerHTML = `
-        <img class="recent-thumb-img" src="${art.imgSrc}" style="filter:${art.filter}" alt="${art.name}"/>
-        <div class="recent-label">${art.name}</div>`;
-    } else {
-      div.innerHTML = `
-        <div class="recent-thumb-placeholder" style="background:${art.color}44">${art.emoji}</div>
-        <div class="recent-label">${art.name}</div>`;
-    }
-    list.appendChild(div);
-  });
+  showLoader("Guardando tu obra…");
+  try {
+    await db.artworks.create({
+      childId:  state.currentUser.id,
+      name,
+      author,
+      age,
+      styleKey,
+      style:    style.label,
+      color:    style.color,
+      filter:   style.filter,
+      imgSrc:   state.captureDataUrl,
+      emoji:    "✨",
+    });
+    await go("success");
+  } catch (e) {
+    console.error(e);
+    alert("No pudimos guardar tu obra. Inténtalo de nuevo.");
+  } finally {
+    hideLoader();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GUARDAR / COMPARTIR IMAGEN (resultado con filtro)
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function _renderFilteredCanvas() {
+  const style = STYLES[state.form.styleKey] || STYLES.vangogh;
+  if (!state.captureDataUrl) return null;
+
+  const img = new Image();
+  img.src = state.captureDataUrl;
+  await new Promise(res => { if (img.complete) res(); else img.onload = res; });
+
+  const canvas = document.createElement("canvas");
+  canvas.width  = img.naturalWidth  || 600;
+  canvas.height = img.naturalHeight || 600;
+  const ctx = canvas.getContext("2d");
+  ctx.filter = style.filter;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+async function downloadResult() {
+  const canvas = await _renderFilteredCanvas();
+  if (!canvas) { alert("Aún no hay imagen para guardar."); return; }
+  const safe = (state.form.name || "mi-obra").replace(/[^a-z0-9\-_]+/gi, "_");
+  const a = document.createElement("a");
+  a.href     = canvas.toDataURL("image/png");
+  a.download = `mambaq_${safe}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function shareResult() {
+  const canvas = await _renderFilteredCanvas();
+  if (!canvas) { alert("Aún no hay imagen para compartir."); return; }
+  const title = state.form.name || "Mi obra MAMBAQ";
+  const text  = `¡Mira mi obra "${title}" hecha en MAMBAQ! 🎨`;
+
+  if (navigator.canShare && navigator.share) {
+    try {
+      const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+      const file = new File([blob], "mambaq.png", { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ title, text, files: [file] });
+        return;
+      }
+      await navigator.share({ title, text });
+      return;
+    } catch (e) { /* canceló o falló — caemos al fallback */ }
+  }
+  downloadResult();
+}
+
+function shareArtwork() {
+  const art = state.selectedArtwork;
+  if (!art) return;
+  const title = art.name;
+  const text  = `Obra "${art.name}" por ${art.author} en MAMBAQ 🎨`;
+  if (navigator.share) {
+    navigator.share({ title, text }).catch(() => {});
+  } else {
+    alert("Compartir no está disponible en este dispositivo.");
+  }
 }

@@ -1,73 +1,85 @@
-// ── Obras de muestra con imágenes reales ─────────────────────────────────────
+// ── Obras de muestra (semillas locales — no se persisten en Supabase) ───────
 const SAMPLE_ARTWORKS = [
   {
-    id: 101, name: "La Naturaleza", author: "David Perez", age: 8,
-    style: "Van Gogh", color: "#2a5298",
+    id: "sample_101", name: "La Naturaleza", author: "David Perez", age: 8,
+    style: "Van Gogh", styleKey: "vangogh", color: "#2a5298",
     filter: "saturate(2.2) hue-rotate(10deg) contrast(1.1)",
     emoji: "🌿", imgSrc: "assets/naturaleza.png",
-    date: new Date(Date.now() - 1000*60*60*2)
+    likes: 12, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*2).toISOString(),
   },
   {
-    id: 102, name: "Pato", author: "Sofia Ayala", age: 6,
-    style: "Pablo Picasso", color: "#8b2252",
+    id: "sample_102", name: "Pato", author: "Sofia Ayala", age: 6,
+    style: "Pablo Picasso", styleKey: "picasso", color: "#8b2252",
     filter: "saturate(1.8) hue-rotate(200deg) contrast(1.4)",
     emoji: "🦆", imgSrc: "assets/pato.png",
-    date: new Date(Date.now() - 1000*60*60*5)
+    likes: 8, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*5).toISOString(),
   },
   {
-    id: 103, name: "El Reloj", author: "Juan Montoya", age: 9,
-    style: "Leonardo da Vinci", color: "#8b6914",
+    id: "sample_103", name: "El Reloj", author: "Juan Montoya", age: 9,
+    style: "Leonardo da Vinci", styleKey: "davinci", color: "#8b6914",
     filter: "sepia(0.8) contrast(1.1)",
     emoji: "⏰", imgSrc: "assets/reloj.png",
-    date: new Date(Date.now() - 1000*60*60*24)
+    likes: 5, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*24).toISOString(),
   },
   {
-    id: 104, name: "Familia", author: "Ricardo Lora", age: 7,
-    style: "Claude Monet", color: "#5b9e8f",
+    id: "sample_104", name: "Familia", author: "Ricardo Lora", age: 7,
+    style: "Claude Monet", styleKey: "monet", color: "#5b9e8f",
     filter: "saturate(0.9) brightness(1.15) blur(1px)",
     emoji: "👨‍👩‍👧", imgSrc: "assets/familia.png",
-    date: new Date(Date.now() - 1000*60*60*30)
+    likes: 10, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*30).toISOString(),
   },
   {
-    id: 105, name: "Mi Casa", author: "Camila Torres", age: 5,
-    style: "Frida Kahlo", color: "#c0392b",
+    id: "sample_105", name: "Mi Casa", author: "Camila Torres", age: 5,
+    style: "Frida Kahlo", styleKey: "frida", color: "#c0392b",
     filter: "saturate(2.8) hue-rotate(320deg)",
     emoji: "🏠", imgSrc: "assets/casa.png",
-    date: new Date(Date.now() - 1000*60*60*48)
+    likes: 7, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*48).toISOString(),
   },
   {
-    id: 106, name: "El Submarino", author: "Andrés Ríos", age: 8,
-    style: "Van Gogh", color: "#2a5298",
+    id: "sample_106", name: "El Submarino", author: "Andrés Ríos", age: 8,
+    style: "Van Gogh", styleKey: "vangogh", color: "#2a5298",
     filter: "saturate(2.2) hue-rotate(10deg) contrast(1.1)",
     emoji: "🌊", imgSrc: "assets/submarino.png",
-    date: new Date(Date.now() - 1000*60*60*72)
+    likes: 14, isSample: true,
+    createdAt: new Date(Date.now() - 1000*60*60*72).toISOString(),
   },
 ];
 
-// ── Tab activo ───────────────────────────────────────────────────────────────
+// ── Tab activo ──────────────────────────────────────────────────────────────
 let currentTab = "todas";
 
-function setTab(tab) {
+async function setTab(tab) {
   currentTab = tab;
   ["todas", "recientes", "populares"].forEach(t => {
     const btn = document.getElementById("tab-" + t);
     if (btn) btn.classList.toggle("active", t === tab);
   });
-  renderMuseo();
+  await renderMuseo();
 }
 
-// ── Render galería ────────────────────────────────────────────────────────────
-function renderMuseo() {
+// ── Render galería ──────────────────────────────────────────────────────────
+async function renderMuseo() {
   const grid = document.getElementById("gallery-grid");
   if (!grid) return;
 
-  const all = [...state.artworks, ...SAMPLE_ARTWORKS];
+  showLoader("Cargando museo…");
+  let persisted = [];
+  try { persisted = await db.artworks.list(); }
+  catch (e) { console.warn(e); }
+  finally { hideLoader(); }
+
+  const all = [...persisted, ...SAMPLE_ARTWORKS];
 
   let sorted;
   if (currentTab === "recientes") {
-    sorted = [...all].sort((a, b) => new Date(b.date) - new Date(a.date));
+    sorted = [...all].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } else if (currentTab === "populares") {
-    sorted = [...SAMPLE_ARTWORKS, ...state.artworks];
+    sorted = [...all].sort((a, b) => (b.likes || 0) - (a.likes || 0));
   } else {
     sorted = all;
   }
@@ -102,7 +114,10 @@ function createArtworkCard(art) {
     <div class="a-name">${art.name}</div>
     <div class="a-author">${art.author}</div>
     ${art.age ? `<div class="a-age">${art.age} años</div>` : ""}
-    <div class="a-style">${art.style}</div>
+    <div class="a-row">
+      <span class="a-style">${art.style}</span>
+      <span class="a-likes">❤️ ${art.likes || 0}</span>
+    </div>
   `;
 
   card.appendChild(thumbWrap);
@@ -110,14 +125,14 @@ function createArtworkCard(art) {
   return card;
 }
 
-// ── Detalle de obra ───────────────────────────────────────────────────────────
-function openArtwork(art) {
+// ── Detalle de obra ─────────────────────────────────────────────────────────
+async function openArtwork(art) {
   state.selectedArtwork = art;
-  renderArtworkDetail(art);
-  go("artwork");
+  await renderArtworkDetail(art);
+  await go("artwork");
 }
 
-function renderArtworkDetail(art) {
+async function renderArtworkDetail(art) {
   const thumbBig = document.getElementById("artwork-thumb-big");
 
   if (art.imgSrc) {
@@ -150,4 +165,41 @@ function renderArtworkDetail(art) {
   const badge = document.getElementById("artwork-detail-style");
   badge.textContent      = art.style;
   badge.style.background = art.color;
+
+  const likeBtn   = document.getElementById("artwork-like-btn");
+  const likeCount = document.getElementById("artwork-like-count");
+  if (likeCount) likeCount.textContent = art.likes || 0;
+
+  if (likeBtn) {
+    let liked = false;
+    if (state.currentUser && !art.isSample) {
+      try { liked = await db.likes.has(state.currentUser.id, art.id); }
+      catch (e) { console.warn(e); }
+    }
+    likeBtn.classList.toggle("liked", liked);
+  }
+}
+
+async function toggleArtworkLike() {
+  const art = state.selectedArtwork;
+  if (!art) return;
+  if (!state.currentUser) { alert("Primero entra como pequeño artista 💛"); return; }
+
+  if (art.isSample) {
+    // Las muestras no están en DB — like solo en memoria
+    art.likes = (art.likes || 0) + 1;
+    document.getElementById("artwork-like-count").textContent = art.likes;
+    document.getElementById("artwork-like-btn").classList.add("liked");
+    return;
+  }
+
+  try {
+    const nowLiked = await db.likes.toggle(state.currentUser.id, art.id);
+    art.likes = Math.max(0, (art.likes || 0) + (nowLiked ? +1 : -1));
+    document.getElementById("artwork-like-count").textContent = art.likes;
+    document.getElementById("artwork-like-btn").classList.toggle("liked", nowLiked);
+  } catch (e) {
+    console.error(e);
+    alert("No se pudo guardar el me gusta.");
+  }
 }
