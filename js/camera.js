@@ -1,101 +1,177 @@
-// ── Captura de imagen ────────────────────────────────────────────────────────
+// ── Teachable Machine: carga desde carpeta model/ ────────────────────────────
+const TM_MODEL_PATH = "model/";
+let tmModel = null;
 
-function triggerCamera() {
-  document.getElementById("file-input-camera").click();
+async function loadTMModel() {
+  if (tmModel) return tmModel;
+  try {
+    tmModel = await tmImage.load(
+      TM_MODEL_PATH + "model.json",
+      TM_MODEL_PATH + "metadata.json"
+    );
+    console.log("✅ Modelo TM cargado");
+    return tmModel;
+  } catch (e) {
+    console.warn("❌ No se pudo cargar el modelo TM:", e);
+    return null;
+  }
 }
 
-function triggerGallery() {
-  document.getElementById("file-input-gallery").click();
+async function classifyImage(imgElement) {
+  const model = await loadTMModel();
+  if (!model) return null;
+  try {
+    const predictions = await model.predict(imgElement);
+    const best = predictions.reduce((a, b) => a.probability > b.probability ? a : b);
+    return { label: best.className, confidence: best.probability };
+  } catch (e) {
+    console.warn("Error al clasificar:", e);
+    return null;
+  }
 }
+
+// ── UI del banner ─────────────────────────────────────────────────────────────
+function showAIBanner(result) {
+  const banner  = document.getElementById("ai-detection-banner");
+  const icon    = document.getElementById("ai-icon");
+  const label   = document.getElementById("ai-label");
+  const conf    = document.getElementById("ai-confidence");
+  const warn    = document.getElementById("ai-warning");
+  const contBtn = document.getElementById("ai-continue-btn");
+  const bar     = document.getElementById("conf-bar");
+  if (!banner) return;
+
+  const isDrawing = result.label === "Dibujo";
+  const pct       = Math.round(result.confidence * 100);
+
+  banner.className  = "ai-banner " + (isDrawing ? "ai-drawing" : "ai-photo");
+  icon.textContent  = isDrawing ? "🖍️" : "📷";
+  label.textContent = isDrawing ? "¡Es un dibujo!" : "¡Eso es una foto!";
+  conf.textContent  = pct + "% de confianza";
+
+  if (!isDrawing) {
+    warn.textContent   = "✏️ Solo se permiten dibujos. ¡Toma papel, dibuja algo y vuelve!";
+    warn.style.display = "block";
+  } else if (result.confidence < 0.70) {
+    warn.textContent   = "🤔 No estamos muy seguros. ¡Puedes continuar igual!";
+    warn.style.display = "block";
+  } else {
+    warn.style.display = "none";
+  }
+
+  banner.style.display = "flex";
+  if (bar) { bar.style.width = "0%"; setTimeout(() => { bar.style.width = pct + "%"; }, 50); }
+
+  if (isDrawing) {
+    // ✅ Dibujo: mostrar botón de continuar
+    if (contBtn) {
+      contBtn.style.display = "block";
+      contBtn.textContent   = "🎨 ¡Transformar mi dibujo!";
+      contBtn.className     = "btn-primary";
+    }
+  } else {
+    // ❌ Foto: ocultar botón continuar y resetear preview tras 2s
+    if (contBtn) contBtn.style.display = "none";
+
+    setTimeout(() => {
+      hideAIBanner();
+      state.captureDataUrl = null;
+      const placeholder = document.getElementById("camera-placeholder");
+      const img         = document.getElementById("camera-preview-img");
+      if (placeholder) placeholder.style.display = "";
+      if (img)         { img.src = ""; img.style.display = "none"; }
+      document.getElementById("file-input-camera").value  = "";
+      document.getElementById("file-input-gallery").value = "";
+    }, 2500);
+  }
+}
+
+function hideAIBanner() {
+  const banner  = document.getElementById("ai-detection-banner");
+  const contBtn = document.getElementById("ai-continue-btn");
+  const warn    = document.getElementById("ai-warning");
+  if (banner)  banner.style.display  = "none";
+  if (contBtn) contBtn.style.display = "none";
+  if (warn)    warn.style.display    = "none";
+}
+
+// ── Captura de imagen ─────────────────────────────────────────────────────────
+function triggerCamera()  { document.getElementById("file-input-camera").click(); }
+function triggerGallery() { document.getElementById("file-input-gallery").click(); }
 
 function handleImageFile(file) {
   if (!file) return;
+  hideAIBanner();
+
+  const placeholder = document.getElementById("camera-placeholder");
+  const img         = document.getElementById("camera-preview-img");
+  const spinner     = document.getElementById("ai-spinner");
+
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     state.captureDataUrl = e.target.result;
-    showCameraPreview(e.target.result);
-    // Pausa breve para que el usuario vea la preview antes de continuar
-    setTimeout(() => go("form"), 600);
+
+    if (placeholder) placeholder.style.display = "none";
+    if (img) { img.src = e.target.result; img.style.display = "block"; }
+    if (spinner) spinner.style.display = "flex";
+
+    await new Promise(res => { if (img.complete) res(); else img.onload = res; });
+
+    const result = await classifyImage(img);
+    if (spinner) spinner.style.display = "none";
+
+    if (result) showAIBanner(result);
+    else setTimeout(() => go("form"), 400);
   };
   reader.readAsDataURL(file);
 }
 
-function showCameraPreview(dataUrl) {
-  const placeholder = document.getElementById("camera-placeholder");
-  const img         = document.getElementById("camera-preview-img");
-  if (placeholder) placeholder.style.display = "none";
-  if (img) {
-    img.src           = dataUrl;
-    img.style.display = "block";
-  }
-}
+function continueToForm() { hideAIBanner(); go("form"); }
 
-// ── Event listeners para inputs ──────────────────────────────────────────────
+// ── Event listeners ───────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const cam     = document.getElementById("file-input-camera");
   const gallery = document.getElementById("file-input-gallery");
-
-  if (cam)     cam.addEventListener("change",     e => handleImageFile(e.target.files[0]));
-  if (gallery) gallery.addEventListener("change",  e => handleImageFile(e.target.files[0]));
+  if (cam)     cam.addEventListener("change",    e => handleImageFile(e.target.files[0]));
+  if (gallery) gallery.addEventListener("change", e => handleImageFile(e.target.files[0]));
+  loadTMModel();
 });
 
-// ── Pantalla de procesamiento ─────────────────────────────────────────────────
+// ── Procesamiento ─────────────────────────────────────────────────────────────
 let processingInterval = null;
 
 function startProcessing() {
   const { styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
 
-  // Reset UI
-  const loading  = document.getElementById("proc-loading");
-  const done     = document.getElementById("proc-done");
-  const bar      = document.getElementById("progress-bar");
-  const before   = document.getElementById("proc-img-before");
-  const after    = document.getElementById("proc-img-after");
-  const lbl      = document.getElementById("proc-style-label");
+  const loading = document.getElementById("proc-loading");
+  const done    = document.getElementById("proc-done");
+  const bar     = document.getElementById("progress-bar");
+  const before  = document.getElementById("proc-img-before");
+  const after   = document.getElementById("proc-img-after");
+  const lbl     = document.getElementById("proc-style-label");
 
   loading.classList.remove("hidden");
   done.classList.add("hidden");
   bar.style.width = "0%";
 
-  // Imágenes
   if (state.captureDataUrl) {
-    before.src            = state.captureDataUrl;
-    before.style.filter   = "";
-    before.classList.remove("hidden");
-
-    after.src             = state.captureDataUrl;
-    after.style.filter    = style.filter;
-    after.classList.add("hidden");
+    before.src = state.captureDataUrl; before.style.filter = ""; before.classList.remove("hidden");
+    after.src  = state.captureDataUrl; after.style.filter  = style.filter; after.classList.add("hidden");
   }
-
   lbl.textContent = `Aplicando estilo ${style.label}…`;
 
-  // Barra de progreso
   let progress = 0;
   if (processingInterval) clearInterval(processingInterval);
-
   processingInterval = setInterval(() => {
     progress += 3;
     bar.style.width = Math.min(progress, 100) + "%";
-
-    // A mitad del proceso se ve la imagen transformada
-    if (progress >= 50) {
-      before.classList.add("hidden");
-      after.classList.remove("hidden");
-    }
-
+    if (progress >= 50) { before.classList.add("hidden"); after.classList.remove("hidden"); }
     if (progress >= 100) {
-      clearInterval(processingInterval);
-      processingInterval = null;
-      setTimeout(() => {
-        loading.classList.add("hidden");
-        done.classList.remove("hidden");
-      }, 300);
+      clearInterval(processingInterval); processingInterval = null;
+      setTimeout(() => { loading.classList.add("hidden"); done.classList.remove("hidden"); }, 300);
     }
   }, 80);
 }
 
-function finishProcessing() {
-  go("result");
-}
+function finishProcessing() { go("result"); }
