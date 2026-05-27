@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
 
@@ -80,9 +82,36 @@
           </div>
           <img id="camera-preview-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px"/>
         </div>
+
+        <!-- Spinner de análisis IA -->
+        <div class="ai-spinner" id="ai-spinner">
+          <div class="ai-spinner-dot"></div>
+          <div class="ai-spinner-dot"></div>
+          <div class="ai-spinner-dot"></div>
+          <span>Analizando imagen…</span>
+        </div>
+
+        <!-- Banner resultado IA -->
+        <div class="ai-banner" id="ai-detection-banner">
+          <div class="ai-banner-top">
+            <span id="ai-icon">🖍️</span>
+            <span id="ai-label">¡Es un dibujo!</span>
+          </div>
+          <span id="ai-confidence">99% de confianza</span>
+          <div class="conf-bar-wrap" id="conf-bar-wrap">
+            <div class="conf-bar" id="conf-bar" style="width:0%"></div>
+          </div>
+          <div id="ai-warning"></div>
+        </div>
+
         <input type="file" id="file-input-camera"  accept="image/*" capture="environment" style="display:none"/>
         <input type="file" id="file-input-gallery" accept="image/*" style="display:none"/>
-        <button class="btn-primary" onclick="triggerCamera()" style="margin-bottom:10px">
+
+        <!-- Botones: aparecen solo cuando hay imagen -->
+        <button class="btn-primary" id="ai-continue-btn" onclick="continueToForm()" style="display:none;margin-bottom:10px">
+          🎨 ¡Transformar mi dibujo!
+        </button>
+        <button class="btn-primary" onclick="triggerCamera()" style="margin-bottom:10px" id="btn-take-photo">
           📷 TOMAR FOTO
         </button>
         <button class="btn-ghost" onclick="triggerGallery()">
