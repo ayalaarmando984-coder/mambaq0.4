@@ -33,6 +33,7 @@ function hideLoader() {
 
 // ── Navegación ──────────────────────────────────────────────────────────────
 async function go(screenId) {
+  if (screenId !== "camera" && typeof stopCamera === "function") stopCamera();
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const target = document.getElementById("screen-" + screenId);
   if (!target) return console.warn("Pantalla no encontrada:", screenId);

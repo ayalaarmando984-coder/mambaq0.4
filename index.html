@@ -129,7 +129,9 @@
             <div style="font-size:56px;margin-bottom:10px">📷</div>
             <div class="camera-hint">Aquí aparecerá tu dibujo</div>
           </div>
+          <video id="camera-video" autoplay playsinline muted style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px"></video>
           <img id="camera-preview-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:20px"/>
+          <div class="camera-live-dot" id="camera-live-dot" style="display:none"></div>
         </div>
 
         <!-- Spinner de análisis IA -->
@@ -156,15 +158,22 @@
         <input type="file" id="file-input-camera"  accept="image/*" capture="environment" style="display:none"/>
         <input type="file" id="file-input-gallery" accept="image/*" style="display:none"/>
 
-        <!-- Botones: aparecen solo cuando hay imagen -->
+        <!-- Botón disparador (solo visible con cámara activa) -->
+        <button class="btn-shutter" id="btn-shutter" onclick="captureFromCamera()" style="display:none" aria-label="Capturar foto">
+          <span class="shutter-ring"></span>
+        </button>
+
+        <!-- Continuar al form (aparece tras clasificación exitosa) -->
         <button class="btn-primary" id="ai-continue-btn" onclick="continueToForm()" style="display:none;margin-bottom:10px">
           🎨 ¡Transformar mi dibujo!
         </button>
-        <button class="btn-primary" onclick="triggerCamera()" style="margin-bottom:10px" id="btn-take-photo">
-          📷 TOMAR FOTO
+
+        <!-- Botones principales -->
+        <button class="btn-primary" id="btn-take-photo" onclick="startCamera()" style="margin-bottom:10px">
+          📷 Tomar foto
         </button>
-        <button class="btn-ghost" onclick="triggerGallery()">
-          🖼️ elegir de la galería
+        <button class="btn-ghost" id="btn-gallery" onclick="triggerGallery()">
+          🖼️ Elegir de la galería
         </button>
       </div>
       <svg class="wave" viewBox="0 0 390 80" xmlns="http://www.w3.org/2000/svg">

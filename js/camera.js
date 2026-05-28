@@ -95,38 +95,125 @@ function hideAIBanner() {
   if (warn)    warn.style.display    = "none";
 }
 
-// ── Captura de imagen ─────────────────────────────────────────────────────────
+// ── Cámara en vivo (getUserMedia) ────────────────────────────────────────────
+let _cameraStream = null;
+
+async function startCamera() {
+  const video       = document.getElementById("camera-video");
+  const placeholder = document.getElementById("camera-placeholder");
+  const img         = document.getElementById("camera-preview-img");
+  const shutter     = document.getElementById("btn-shutter");
+  const takeBtn     = document.getElementById("btn-take-photo");
+  const galleryBtn  = document.getElementById("btn-gallery");
+  const liveDot     = document.getElementById("camera-live-dot");
+
+  // Si getUserMedia no está disponible, caer al file input
+  if (!navigator.mediaDevices?.getUserMedia) {
+    document.getElementById("file-input-camera").click();
+    return;
+  }
+
+  try {
+    _cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false,
+    });
+
+    video.srcObject = _cameraStream;
+    if (placeholder) placeholder.style.display = "none";
+    if (img)         img.style.display         = "none";
+    video.style.display = "block";
+    if (liveDot)    liveDot.style.display      = "block";
+    if (shutter)    shutter.style.display      = "flex";
+    if (takeBtn)  { takeBtn.textContent = "✕ Cancelar"; takeBtn.onclick = stopCamera; }
+    if (galleryBtn) galleryBtn.style.display   = "none";
+
+    hideAIBanner();
+  } catch (e) {
+    console.warn("Cámara no disponible:", e.message);
+    // Fallback: file input con capture
+    document.getElementById("file-input-camera").click();
+  }
+}
+
+function stopCamera() {
+  if (_cameraStream) {
+    _cameraStream.getTracks().forEach(t => t.stop());
+    _cameraStream = null;
+  }
+
+  const video      = document.getElementById("camera-video");
+  const shutter    = document.getElementById("btn-shutter");
+  const takeBtn    = document.getElementById("btn-take-photo");
+  const galleryBtn = document.getElementById("btn-gallery");
+  const placeholder= document.getElementById("camera-placeholder");
+  const liveDot    = document.getElementById("camera-live-dot");
+
+  if (video)      video.style.display      = "none";
+  if (liveDot)    liveDot.style.display    = "none";
+  if (shutter)    shutter.style.display    = "none";
+  if (galleryBtn) galleryBtn.style.display = "";
+
+  if (takeBtn) {
+    takeBtn.innerHTML = "📷 Tomar foto";
+    takeBtn.onclick   = startCamera;
+  }
+
+  // Mostrar placeholder solo si no hay imagen capturada
+  if (!state.captureDataUrl && placeholder) placeholder.style.display = "";
+}
+
+function captureFromCamera() {
+  const video = document.getElementById("camera-video");
+  if (!video || !_cameraStream) return;
+
+  const canvas  = document.createElement("canvas");
+  canvas.width  = video.videoWidth  || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  stopCamera();
+
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+  _processImage(dataUrl);
+}
+
+// ── Carga desde archivo (galería / file input) ────────────────────────────────
 function triggerCamera()  { document.getElementById("file-input-camera").click(); }
 function triggerGallery() { document.getElementById("file-input-gallery").click(); }
 
 function handleImageFile(file) {
   if (!file) return;
+  stopCamera();
   hideAIBanner();
+
+  const reader = new FileReader();
+  reader.onload = e => _processImage(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+// ── Lógica común: mostrar imagen y clasificar ─────────────────────────────────
+function _processImage(dataUrl) {
+  state.captureDataUrl = dataUrl;
 
   const placeholder = document.getElementById("camera-placeholder");
   const img         = document.getElementById("camera-preview-img");
   const spinner     = document.getElementById("ai-spinner");
 
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    state.captureDataUrl = e.target.result;
+  if (placeholder) placeholder.style.display = "none";
+  if (img) { img.src = dataUrl; img.style.display = "block"; }
+  if (spinner) spinner.style.display = "flex";
 
-    if (placeholder) placeholder.style.display = "none";
-    if (img) { img.src = e.target.result; img.style.display = "block"; }
-    if (spinner) spinner.style.display = "flex";
-
-    await new Promise(res => { if (img.complete) res(); else img.onload = res; });
-
+  img.onload = async () => {
     const result = await classifyImage(img);
     if (spinner) spinner.style.display = "none";
-
     if (result) showAIBanner(result);
     else setTimeout(() => go("form"), 400);
   };
-  reader.readAsDataURL(file);
+  if (img.complete) img.onload();
 }
 
-function continueToForm() { hideAIBanner(); go("form"); }
+function continueToForm() { stopCamera(); hideAIBanner(); go("form"); }
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {

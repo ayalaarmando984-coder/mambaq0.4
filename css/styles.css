@@ -271,6 +271,49 @@ body {
 }
 .camera-hint { font-size: 14px; color: var(--warm-gray); font-weight: 700; text-align: center; padding: 0 20px; }
 
+/* ── Shutter button ──────────────────────────────────────── */
+.btn-shutter {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 auto 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+  transition: transform .1s, box-shadow .1s;
+}
+.btn-shutter:active { transform: scale(0.90); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.shutter-ring {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--amber);
+  display: block;
+  transition: transform .1s;
+}
+.btn-shutter:active .shutter-ring { transform: scale(0.88); }
+
+/* ── Live camera indicator ───────────────────────────────── */
+.camera-live-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 0 0 3px rgba(229,57,53,.25);
+  animation: live-blink 1.2s ease-in-out infinite;
+}
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
 /* ── Processing ─────────────────────────────────────────── */
 .processing-wrap {
   display: flex;
