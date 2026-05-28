@@ -10,6 +10,16 @@ const STYLES = {
 // ── Avatares disponibles ────────────────────────────────────────────────────
 const AVATARS = ["🐱","🐶","🦄","🐸","🐼","🦊","🐙","🐯","🦖","🐧","🐵","🦁"];
 
+// ── Filtro básico de palabras inapropiadas ──────────────────────────────────
+// Lista mínima para un contexto infantil. No reemplaza moderación server-side.
+const _BAD = ["mierda","puta","puto","culo","marica","idiota","estupido","estúpido",
+              "pendejo","cabron","cabrón","coño","verga","pene","vagina","sexo",
+              "fuck","shit","ass","bitch","damn","crap","bastard","nigger","hate"];
+function _hasBadWord(text) {
+  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  return _BAD.some(w => t.includes(w));
+}
+
 // ── Estado global ───────────────────────────────────────────────────────────
 const state = {
   currentUser: null,
@@ -115,6 +125,7 @@ function selectAvatar(av) {
 async function loginSubmit() {
   const name = document.getElementById("login-name").value.trim();
   if (!name) { alert("Escribe tu nombre, peque artista 💛"); return; }
+  if (_hasBadWord(name)) { alert("Ese nombre no está permitido 😊 ¡Pon otro!"); return; }
 
   showLoader("Creando tu perfil…");
   try {
@@ -226,6 +237,7 @@ function submitForm() {
   const key  = state.form.styleKey || "vangogh";
 
   if (!name) { alert("Ponle un nombre a tu obra 🎨"); return; }
+  if (_hasBadWord(name)) { alert("Ese nombre no está permitido 😊 ¡Pon otro!"); return; }
   if (!age || isNaN(age) || +age < 3 || +age > 12) {
     alert("Por favor escribe una edad entre 3 y 12 🎈");
     return;
@@ -292,6 +304,11 @@ function renderSuccess() {
 
 async function registerArtwork() {
   if (!state.currentUser) { await go("login"); return; }
+  if (!state.aiVerified) {
+    alert("Solo se pueden registrar dibujos verificados por la IA 🖍️");
+    await go("camera");
+    return;
+  }
   const { name, author, age, styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
 

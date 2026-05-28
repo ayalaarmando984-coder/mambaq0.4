@@ -63,7 +63,7 @@ function showAIBanner(result) {
   if (bar) { bar.style.width = "0%"; setTimeout(() => { bar.style.width = pct + "%"; }, 50); }
 
   if (isDrawing) {
-    // ✅ Dibujo: mostrar botón de continuar
+    state.aiVerified = true;
     if (contBtn) {
       contBtn.style.display = "block";
       contBtn.textContent   = "🎨 ¡Transformar mi dibujo!";
@@ -192,23 +192,43 @@ function handleImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// ── Lógica común: mostrar imagen y clasificar ─────────────────────────────────
-function _processImage(dataUrl) {
-  state.captureDataUrl = dataUrl;
+// ── Redimensionar imagen si supera 1200px (reduce peso antes de subir) ───────
+async function _resizeIfNeeded(dataUrl, maxPx = 1200) {
+  return new Promise(resolve => {
+    const tmp = new Image();
+    tmp.onload = () => {
+      if (tmp.width <= maxPx && tmp.height <= maxPx) { resolve(dataUrl); return; }
+      const scale  = maxPx / Math.max(tmp.width, tmp.height);
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(tmp.width  * scale);
+      canvas.height = Math.round(tmp.height * scale);
+      canvas.getContext("2d").drawImage(tmp, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.88));
+    };
+    tmp.src = dataUrl;
+  });
+}
+
+// ── Lógica común: redimensionar, mostrar imagen y clasificar ──────────────────
+async function _processImage(dataUrl) {
+  state.aiVerified = false;
+
+  const resized = await _resizeIfNeeded(dataUrl);
+  state.captureDataUrl = resized;
 
   const placeholder = document.getElementById("camera-placeholder");
   const img         = document.getElementById("camera-preview-img");
   const spinner     = document.getElementById("ai-spinner");
 
   if (placeholder) placeholder.style.display = "none";
-  if (img) { img.src = dataUrl; img.style.display = "block"; }
+  if (img) { img.src = resized; img.style.display = "block"; }
   if (spinner) spinner.style.display = "flex";
 
   img.onload = async () => {
     const result = await classifyImage(img);
     if (spinner) spinner.style.display = "none";
     if (result) showAIBanner(result);
-    else setTimeout(() => go("form"), 400);
+    else { state.aiVerified = true; setTimeout(() => go("form"), 400); }
   };
   if (img.complete) img.onload();
 }

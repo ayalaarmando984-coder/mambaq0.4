@@ -74,9 +74,13 @@ create policy "insert children" on children for insert with check (true);
 create policy "insert artworks" on artworks for insert with check (true);
 create policy "insert likes"    on likes    for insert with check (true);
 
--- Delete solo permitido en likes (para "unlike")
-drop policy if exists "delete own like" on likes;
-create policy "delete own like" on likes for delete using (true);
+-- Delete permitido en likes (para "unlike"), artworks y children
+drop policy if exists "delete own like"    on likes;
+drop policy if exists "delete own artwork" on artworks;
+drop policy if exists "delete own child"   on children;
+create policy "delete own like"    on likes    for delete using (true);
+create policy "delete own artwork" on artworks for delete using (true);
+create policy "delete own child"   on children for delete using (true);
 
 -- Update permitido en children (last_seen_at) y artworks (image_url tras upload)
 drop policy if exists "update children" on children;

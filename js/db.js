@@ -3,6 +3,23 @@
 //  Misma API async que antes; app.js y museo.js no necesitan cambios.
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── Rate limiter por dispositivo ──────────────────────────────────────────
+// Guarda timestamps en localStorage y rechaza si supera el límite en 1 hora.
+// No detiene bots avanzados, pero evita spam accidental y abuso casual.
+const _rl = {
+  _key: k => "mambaq.rl." + k,
+  check(key, maxPerHour) {
+    const now    = Date.now();
+    const window = 60 * 60 * 1000;
+    const hits   = JSON.parse(localStorage.getItem(this._key(key)) || "[]")
+                     .filter(t => now - t < window);
+    if (hits.length >= maxPerHour) return false;
+    hits.push(now);
+    localStorage.setItem(this._key(key), JSON.stringify(hits));
+    return true;
+  },
+};
+
 function _client() {
   if (window._sbClient) return window._sbClient;
   const cfg = window.MAMBAQ_CONFIG;
@@ -69,6 +86,8 @@ const usersAPI = {
   },
 
   async create({ name, avatar }) {
+    if (!_rl.check("users", 3))
+      throw new Error("RATE_LIMIT: Espera un momento antes de crear otro perfil.");
     const { data, error } = await _client()
       .from("children")
       .insert({ name: (name || "").trim(), avatar: avatar || "🦄" })
@@ -112,6 +131,8 @@ const artworksAPI = {
   },
 
   async create(input) {
+    if (!_rl.check("artworks", 15))
+      throw new Error("RATE_LIMIT: Registraste muchas obras seguidas. Intenta en un momento.");
     const sb = _client();
     let image_url = null;
     let image_path = null;
@@ -151,6 +172,11 @@ const artworksAPI = {
       .single();
     if (error) throw error;
     return { ..._toArtwork(data), likes: 0 };
+  },
+
+  async delete(id) {
+    const { error } = await _client().from("artworks").delete().eq("id", id);
+    if (error) throw error;
   },
 };
 
