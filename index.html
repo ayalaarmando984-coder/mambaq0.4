@@ -78,21 +78,24 @@
         </button>
       </div>
       <div class="screen-body">
-        <div class="fredoka title-lg" style="margin-bottom:8px">
-          <span id="home-greeting">¡Hola!</span><br/>
-          ¡Convierte tu dibujo en arte!
+        <div class="home-hero">
+          <div class="home-artists">🌟🔷🌸🌺🏺</div>
+          <div class="fredoka title-lg" style="margin-bottom:6px">
+            <span id="home-greeting">¡Hola!</span><br/>
+            ¡Convierte tu dibujo<br/>en una obra de arte!
+          </div>
+          <p class="subtitle" style="margin-bottom:20px">
+            Elige un estilo de los grandes maestros y transforma tu dibujo ✨
+          </p>
+          <button class="btn-primary btn-hero" onclick="go('camera')">
+            📸 ¡Comenzar ahora!
+          </button>
         </div>
-        <p class="subtitle" style="margin-bottom:24px">
-          Toma una foto de tu dibujo y lo transformamos al estilo de los grandes maestros 🖌️
-        </p>
-        <button class="btn-primary" onclick="go('camera')" style="margin-bottom:14px">
-          📸 ¡Comenzar!
-        </button>
         <div class="home-grid">
           <div class="card card-nav" onclick="go('museo')">
             <div class="card-icon">🏛️</div>
             <div class="card-nav-title">Museo</div>
-            <div class="card-nav-sub">Interactivo</div>
+            <div class="card-nav-sub">Ver obras de todos</div>
           </div>
           <div class="card card-nav" onclick="go('conocenos')">
             <div class="card-icon">ℹ️</div>
@@ -206,20 +209,31 @@
         </div>
         <div class="form-group">
           <label class="field-label">Estilo artístico</label>
-          <div class="select-wrap">
-            <div class="style-dot" id="style-dot"></div>
-            <select class="input-field select-field" id="input-style" onchange="updateStyleDot()">
-              <option value="vangogh"  data-color="#2a5298">Van Gogh</option>
-              <option value="picasso"  data-color="#8b2252">Pablo Picasso</option>
-              <option value="monet"    data-color="#5b9e8f">Claude Monet</option>
-              <option value="frida"    data-color="#c0392b">Frida Kahlo</option>
-              <option value="davinci"  data-color="#8b6914">Leonardo da Vinci</option>
-            </select>
-            <span class="select-arrow">▾</span>
+          <div class="style-grid">
+            <div class="style-card selected" data-style="vangogh" onclick="selectStyle('vangogh')">
+              <div class="style-card-swatch" style="background:linear-gradient(135deg,#2a5298,#5b8fd4)">🌟</div>
+              <div class="style-card-name">Van Gogh</div>
+            </div>
+            <div class="style-card" data-style="picasso" onclick="selectStyle('picasso')">
+              <div class="style-card-swatch" style="background:linear-gradient(135deg,#8b2252,#c43b7a)">🔷</div>
+              <div class="style-card-name">Picasso</div>
+            </div>
+            <div class="style-card" data-style="monet" onclick="selectStyle('monet')">
+              <div class="style-card-swatch" style="background:linear-gradient(135deg,#5b9e8f,#8ecfc3)">🌸</div>
+              <div class="style-card-name">Monet</div>
+            </div>
+            <div class="style-card" data-style="frida" onclick="selectStyle('frida')">
+              <div class="style-card-swatch" style="background:linear-gradient(135deg,#c0392b,#e05a4e)">🌺</div>
+              <div class="style-card-name">Frida</div>
+            </div>
+            <div class="style-card" data-style="davinci" onclick="selectStyle('davinci')">
+              <div class="style-card-swatch" style="background:linear-gradient(135deg,#8b6914,#c4961e)">🏺</div>
+              <div class="style-card-name">Da Vinci</div>
+            </div>
           </div>
         </div>
-        <button class="btn-primary" onclick="submitForm()" style="margin-top:20px">
-          Continuar
+        <button class="btn-primary" onclick="submitForm()" style="margin-top:12px">
+          Ver cómo queda 🎨
         </button>
       </div>
       <svg class="wave" viewBox="0 0 390 90" xmlns="http://www.w3.org/2000/svg">
@@ -238,25 +252,25 @@
         <button class="home-btn" onclick="go('home')">🏠</button>
       </div>
       <div class="screen-body centered">
-        <div class="fredoka title-md" style="text-align:center;margin-bottom:16px">
-          VISTA DE TU<br/>PEQUEÑA OBRA
+        <div class="fredoka title-md" style="text-align:center;margin-bottom:12px">
+          ¿Así queda tu obra? 🎨
         </div>
-        <div style="width:240px;height:240px;border-radius:24px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+        <div class="preview-frame">
           <img id="preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover"/>
-        </div>
-        <div class="card" style="width:100%;margin-bottom:18px">
-          <div class="info-row">Arte: <b id="preview-name">—</b></div>
-          <div class="info-row">Autor: <b id="preview-author">—</b></div>
-          <div class="info-row">Edad: <b id="preview-age">—</b></div>
-          <div class="info-row" style="display:flex;align-items:center;gap:8px">
-            Estilo: <span class="style-badge" id="preview-style-badge">—</span>
+          <div class="preview-badge-wrap">
+            <span class="style-badge" id="preview-style-badge">—</span>
           </div>
         </div>
-        <button class="btn-ghost" onclick="go('camera')" style="margin-bottom:10px;width:100%">
-          ↩ Volver a tomar la foto
+        <div class="card preview-info-card">
+          <div class="info-row">🖼️ <b id="preview-name">—</b></div>
+          <div class="info-row">👤 <b id="preview-author">—</b></div>
+          <div class="info-row">🎂 <b id="preview-age">—</b></div>
+        </div>
+        <button class="btn-primary" onclick="go('processing')" style="margin-bottom:10px">
+          ¡Aplicar estilo! ✨
         </button>
-        <button class="btn-primary" onclick="go('processing')">
-          Continuar
+        <button class="btn-ghost" onclick="go('camera')">
+          ↩ Cambiar foto
         </button>
       </div>
       <svg class="wave" viewBox="0 0 390 70" xmlns="http://www.w3.org/2000/svg">
@@ -276,17 +290,17 @@
           <img id="proc-img-after"  src="" alt="" class="proc-img hidden"/>
         </div>
         <div id="proc-loading">
-          <div style="font-size:38px;animation:spin 1.5s linear infinite;margin-bottom:8px">⚙️</div>
-          <div class="fredoka" style="font-size:18px;color:var(--brown);text-align:center">ESPERA UN MOMENTO..</div>
-          <div id="proc-style-label" style="font-size:13px;color:var(--warm-gray);font-weight:600;text-align:center;margin-top:4px"></div>
+          <div class="proc-spinner">🎨</div>
+          <div class="fredoka" style="font-size:20px;color:var(--brown);text-align:center;margin-bottom:4px">Transformando tu obra…</div>
+          <div id="proc-style-label" style="font-size:13px;color:var(--warm-gray);font-weight:700;text-align:center;margin-bottom:12px"></div>
           <div class="progress-bar-wrap">
             <div class="progress-bar" id="progress-bar"></div>
           </div>
         </div>
         <div id="proc-done" class="hidden" style="text-align:center;animation:slideUp .4s ease">
-          <div style="font-size:48px;animation:pop .5s ease">✨</div>
-          <div class="fredoka" style="font-size:20px;color:var(--brown);margin:8px 0">¡Lista!</div>
-          <button class="btn-primary" onclick="finishProcessing()">Ver mi obra</button>
+          <div style="font-size:56px;animation:pop .6s cubic-bezier(.34,1.56,.64,1)">🎉</div>
+          <div class="fredoka" style="font-size:22px;color:var(--brown);margin:10px 0">¡Lista tu obra!</div>
+          <button class="btn-primary" onclick="finishProcessing()">Ver el resultado →</button>
         </div>
       </div>
     </div>
@@ -301,28 +315,26 @@
         <button class="home-btn" onclick="go('home')">🏠</button>
       </div>
       <div class="screen-body centered">
-        <div class="fredoka title-md" style="text-align:center;margin-bottom:14px">
-          🎉 ¡Así quedó<br/>tu Imagen!
-        </div>
-        <div style="width:240px;height:240px;border-radius:24px;overflow:hidden;margin-bottom:14px;box-shadow:0 12px 40px rgba(0,0,0,0.18)">
+        <div class="result-frame">
           <img id="result-img" src="" alt="" style="width:100%;height:100%;object-fit:cover"/>
-        </div>
-        <div class="card" style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div class="style-circle" id="result-style-circle"></div>
-          <div>
-            <div style="font-size:12px;color:var(--warm-gray);font-weight:600">Estilo Aplicado:</div>
-            <div style="font-size:16px;font-weight:800;color:var(--brown)" id="result-style-name"></div>
+          <div class="result-style-pill">
+            <div class="style-circle" id="result-style-circle"></div>
+            <span id="result-style-name"></span>
           </div>
         </div>
-        <button class="btn-secondary" onclick="downloadResult()" style="margin-bottom:10px;width:100%">
-          💾 Guardar imagen
-        </button>
-        <button class="btn-ghost" onclick="shareResult()" style="margin-bottom:10px;width:100%">
-          ↗ Compartir
-        </button>
-        <button class="btn-primary" onclick="registerArtwork()">
-          Registrar en el museo →
-        </button>
+        <div class="result-actions">
+          <button class="btn-primary" onclick="registerArtwork()" style="margin-bottom:10px">
+            🏛️ Registrar en el museo
+          </button>
+          <div style="display:flex;gap:10px;width:100%">
+            <button class="btn-secondary" onclick="downloadResult()" style="flex:1">
+              💾 Guardar
+            </button>
+            <button class="btn-ghost" onclick="shareResult()" style="flex:1">
+              ↗ Compartir
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

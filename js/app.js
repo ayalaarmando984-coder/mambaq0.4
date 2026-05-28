@@ -1,10 +1,10 @@
 // ── Estilos artísticos disponibles ──────────────────────────────────────────
 const STYLES = {
-  vangogh: { label: "Van Gogh",          color: "#2a5298", filter: "saturate(2.2) hue-rotate(10deg) contrast(1.1) brightness(1.05)" },
-  picasso: { label: "Pablo Picasso",     color: "#8b2252", filter: "saturate(1.8) hue-rotate(200deg) contrast(1.4) brightness(0.95)" },
-  monet:   { label: "Claude Monet",      color: "#5b9e8f", filter: "saturate(0.9) brightness(1.15) blur(1.2px) contrast(0.9)" },
-  frida:   { label: "Frida Kahlo",       color: "#c0392b", filter: "saturate(2.8) hue-rotate(320deg) contrast(1.2)" },
-  davinci: { label: "Leonardo da Vinci", color: "#8b6914", filter: "sepia(0.8) contrast(1.1) brightness(0.95)" },
+  vangogh: { label: "Van Gogh",          emoji: "🌟", color: "#2a5298", filter: "saturate(3.8) hue-rotate(12deg) contrast(1.5) brightness(1.12)" },
+  picasso: { label: "Pablo Picasso",     emoji: "🔷", color: "#8b2252", filter: "contrast(2.8) saturate(3) hue-rotate(195deg) brightness(0.88)" },
+  monet:   { label: "Claude Monet",      emoji: "🌸", color: "#5b9e8f", filter: "blur(2.8px) saturate(0.55) brightness(1.35) contrast(0.7)" },
+  frida:   { label: "Frida Kahlo",       emoji: "🌺", color: "#c0392b", filter: "saturate(5) hue-rotate(335deg) contrast(1.6) brightness(1.08)" },
+  davinci: { label: "Leonardo da Vinci", emoji: "🏺", color: "#8b6914", filter: "sepia(1) contrast(2) brightness(0.82) saturate(0.4)" },
 };
 
 // ── Avatares disponibles ────────────────────────────────────────────────────
@@ -205,6 +205,13 @@ async function renderHomeRecents() {
 //  FORMULARIO
 // ═══════════════════════════════════════════════════════════════════════════
 
+function selectStyle(key) {
+  state.form.styleKey = key;
+  document.querySelectorAll(".style-card").forEach(c => {
+    c.classList.toggle("selected", c.dataset.style === key);
+  });
+}
+
 function updateStyleDot() {
   const sel = document.getElementById("input-style");
   const dot = document.getElementById("style-dot");
@@ -216,7 +223,7 @@ function updateStyleDot() {
 function submitForm() {
   const name = document.getElementById("input-name").value.trim();
   const age  = document.getElementById("input-age").value.trim();
-  const key  = document.getElementById("input-style").value;
+  const key  = state.form.styleKey || "vangogh";
 
   if (!name) { alert("Ponle un nombre a tu obra 🎨"); return; }
   if (!age || isNaN(age) || +age < 3 || +age > 12) {
@@ -241,13 +248,16 @@ function renderPreview() {
   const { name, author, age, styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
 
-  document.getElementById("preview-img").src            = state.captureDataUrl || "";
+  const img = document.getElementById("preview-img");
+  img.src          = state.captureDataUrl || "";
+  img.style.filter = style.filter;
+
   document.getElementById("preview-name").textContent   = name   || "—";
   document.getElementById("preview-author").textContent = author || "—";
   document.getElementById("preview-age").textContent    = age ? age + " años" : "—";
 
   const badge = document.getElementById("preview-style-badge");
-  badge.textContent      = style.label;
+  badge.textContent      = style.emoji + " " + style.label;
   badge.style.background = style.color;
 }
 
