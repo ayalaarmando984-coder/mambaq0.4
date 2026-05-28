@@ -96,6 +96,8 @@ con la SDK de Supabase y con el cargado del modelo TensorFlow.
 También funciona con cualquier servidor estático: `npx serve`, Live Server de
 VS Code, etc.
 
+## Estilos artísticos disponibles
+
 ## Probar el flujo
 
 1. Primera carga: pantalla de login. Escribir un nombre, elegir un avatar,
