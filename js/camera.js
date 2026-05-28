@@ -270,21 +270,11 @@ async function startProcessing() {
   }
   lbl.textContent = `Aplicando estilo ${style.label}…`;
 
-  let filterDone  = false;
-  let filterPct   = 0;
+  let filterDone = false;
   state.filteredDataUrl = null;
-  state.filterMethod    = "canvas";
 
-  applyArtisticFilter(
-    state.captureDataUrl,
-    styleKey,
-    (pct, msg) => {
-      filterPct = pct;
-      if (lbl && msg) lbl.textContent = msg;
-    }
-  ).then(({ result, method }) => {
+  applyArtisticFilter(state.captureDataUrl, styleKey).then(result => {
     state.filteredDataUrl = result;
-    state.filterMethod    = method;
     filterDone = true;
     if (after) { after.src = result; after.style.filter = ""; }
   }).catch(() => {
@@ -295,9 +285,8 @@ async function startProcessing() {
   let progress = 0;
   if (processingInterval) clearInterval(processingInterval);
   processingInterval = setInterval(() => {
-    // Avanzar siguiendo el progreso real del filtro, limitado al 90%
-    const target = filterDone ? 100 : Math.min(90, filterPct || 0);
-    if (progress < target) progress = Math.min(progress + 2, target);
+    const cap = filterDone ? 100 : 85;
+    progress = Math.min(progress + 3, cap);
     bar.style.width = progress + "%";
     if (progress >= 50) { before.classList.add("hidden"); after.classList.remove("hidden"); }
     if (progress >= 100) {

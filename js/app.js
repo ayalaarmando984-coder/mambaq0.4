@@ -289,14 +289,6 @@ function renderResult() {
 
   document.getElementById("result-style-circle").style.background = style.color;
   document.getElementById("result-style-name").textContent        = style.emoji + " " + style.label;
-
-  const badge = document.getElementById("result-method-badge");
-  if (badge) {
-    const isAI = state.filterMethod === "ai";
-    badge.textContent = isAI ? "✨ Generado con IA" : "🎨 Filtro artístico";
-    badge.style.background = isAI ? "rgba(99,102,241,.85)" : "rgba(0,0,0,.45)";
-    badge.style.display = "block";
-  }
 }
 
 function renderSuccess() {
