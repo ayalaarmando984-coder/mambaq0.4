@@ -9,6 +9,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 window.MAMBAQ_CONFIG = {
-  supabaseUrl:     "PEGA_AQUI_TU_PROJECT_URL",
-  supabaseAnonKey: "PEGA_AQUI_TU_ANON_KEY",
+  supabaseUrl:     "https://vgkabsimrpfwlerovitq.supabase.co",
+  supabaseAnonKey: "sb_publishable_N3II1A1g-UkP1DgUpWNeKw_8uISgJzU",
 };
