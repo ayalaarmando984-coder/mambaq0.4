@@ -88,7 +88,8 @@ async function renderLogin() {
     grid.appendChild(btn);
   });
 
-  const existing = await db.users.list();
+  const deviceIds = db.session.deviceUsers.list();
+  const existing  = (await Promise.all(deviceIds.map(id => db.users.get(id)))).filter(Boolean);
   const wrap = document.getElementById("login-existing");
   const list = document.getElementById("existing-users-list");
   if (!existing.length) { wrap.style.display = "none"; return; }
@@ -118,6 +119,7 @@ async function loginSubmit() {
   showLoader("Creando tu perfil…");
   try {
     const user = await db.users.create({ name, avatar: state.selectedAvatar });
+    db.session.deviceUsers.add(user.id);
     db.session.set(user.id);
     state.currentUser = user;
     await go("home");
@@ -134,6 +136,7 @@ async function loginAsExisting(userId) {
   try {
     const user = await db.users.get(userId);
     if (!user) return;
+    db.session.deviceUsers.add(user.id);
     db.session.set(user.id);
     state.currentUser = user;
     await go("home");

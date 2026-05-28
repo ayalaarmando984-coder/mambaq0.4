@@ -186,7 +186,9 @@ const likesAPI = {
 };
 
 // ── Sesión (localStorage es suficiente — no necesita ir a Supabase) ───────
-const SESSION_KEY = "mambaq.session.v2";
+const SESSION_KEY    = "mambaq.session.v2";
+const DEVICE_USERS_KEY = "mambaq.device.v1";
+
 const sessionAPI = {
   get() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
@@ -199,6 +201,20 @@ const sessionAPI = {
   async currentUser() {
     const s = this.get();
     return s ? await usersAPI.get(s.userId) : null;
+  },
+
+  // IDs de usuarios creados en ESTE dispositivo
+  deviceUsers: {
+    list() {
+      try { return JSON.parse(localStorage.getItem(DEVICE_USERS_KEY) || "[]"); } catch { return []; }
+    },
+    add(userId) {
+      const ids = this.list();
+      if (!ids.includes(userId)) {
+        ids.push(userId);
+        localStorage.setItem(DEVICE_USERS_KEY, JSON.stringify(ids));
+      }
+    },
   },
 };
 
