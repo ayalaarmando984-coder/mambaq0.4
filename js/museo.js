@@ -1,3 +1,7 @@
+function _esc(str) {
+  return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
 // ── Obras de muestra (semillas locales — no se persisten en Supabase) ───────
 const SAMPLE_ARTWORKS = [
   {
@@ -111,11 +115,11 @@ function createArtworkCard(art) {
   const info = document.createElement("div");
   info.className = "artwork-info";
   info.innerHTML = `
-    <div class="a-name">${art.name}</div>
-    <div class="a-author">${art.author}</div>
-    ${art.age ? `<div class="a-age">${art.age} años</div>` : ""}
+    <div class="a-name">${_esc(art.name)}</div>
+    <div class="a-author">${_esc(art.author)}</div>
+    ${art.age ? `<div class="a-age">${_esc(String(art.age))} años</div>` : ""}
     <div class="a-row">
-      <span class="a-style">${art.style}</span>
+      <span class="a-style">${_esc(art.style)}</span>
       <span class="a-likes">❤️ ${art.likes || 0}</span>
     </div>
   `;
@@ -136,9 +140,16 @@ async function renderArtworkDetail(art) {
   const thumbBig = document.getElementById("artwork-thumb-big");
 
   if (art.imgSrc) {
-    thumbBig.innerHTML = `<img src="${art.imgSrc}" alt="${art.name}"
-      style="width:100%;height:100%;object-fit:cover;filter:${art.filter || ''}"
-      onerror="this.parentElement.textContent='${art.emoji}'"/>`;
+    const img = document.createElement("img");
+    img.src   = art.imgSrc;
+    img.alt   = _esc(art.name);
+    img.style.cssText = `width:100%;height:100%;object-fit:cover;filter:${art.filter || ""}`;
+    img.onerror = () => {
+      thumbBig.innerHTML = "";
+      thumbBig.textContent = art.emoji || "✨";
+    };
+    thumbBig.innerHTML = "";
+    thumbBig.appendChild(img);
     thumbBig.style.fontSize = "";
     thumbBig.style.display  = "block";
   } else {
