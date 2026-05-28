@@ -1,122 +1,157 @@
-# MAMBAQ
+# MAMBAQ — Museo de Arte Moderno de Barranquilla
 
-Prototipo web del Museo de Arte Moderno de Barranquilla. Pensado para que niños
-entre 3 y 12 años transformen sus dibujos en obras al estilo de Van Gogh,
-Picasso, Monet, Frida Kahlo o Da Vinci.
+App web para niños de 3 a 12 años. Toman una foto de su dibujo, eligen el estilo de un maestro del arte, y la IA transforma su obra al estilo elegido. Las obras quedan guardadas en una galería pública compartida.
 
-Es un proyecto académico de la Universidad Simón Bolívar (Ingeniería de
-Sistemas) en colaboración con el MAMBAQ.
+Proyecto académico — Universidad Simón Bolívar, Barranquilla (Ingeniería de Sistemas).
 
 ---
 
 ## Qué hace
 
-Un niño abre la app, se identifica con su nombre y un avatar, y entra a una
-pantalla tipo museo. Toma una foto de su dibujo (o la sube desde la galería),
-elige el estilo de un maestro, y la app le devuelve una versión "transformada"
-de la obra. Si quiere, la registra en la galería pública del museo, donde
-también puede ver lo que han hecho los demás y darles me gusta.
+1. El niño entra con su nombre y un avatar.
+2. Toma una foto de su dibujo (cámara en vivo) o la sube desde la galería.
+3. Un clasificador IA (Teachable Machine) valida que sea un dibujo, no una foto.
+4. Elige el estilo de un maestro: Van Gogh, Picasso, Monet, Frida Kahlo o Da Vinci.
+5. Un filtro artístico real (manipulación de píxeles con canvas) transforma la imagen.
+6. La obra queda registrada en Supabase y visible en el Museo Interactivo.
 
-Internamente hay un detalle que importa: antes de procesar la imagen, un
-clasificador entrenado en Teachable Machine valida que efectivamente sea un
-dibujo y no una foto cualquiera. Si la imagen es una foto, la app la rechaza
-amablemente. Es una protección sencilla pensando en el contexto de niños.
+---
 
-La "transformación" no es una IA generativa pesada — son filtros CSS calibrados
-para cada estilo. Se ejecuta todo en el navegador, sin servidor de inferencia.
-Para el alcance del prototipo es suficiente y mantiene la latencia en cero.
+## Stack
 
-## Cómo está hecho
+| Capa | Tecnología |
+|---|---|
+| Frontend | HTML + CSS + JavaScript vanilla (sin build step) |
+| IA clasificación | TensorFlow.js + Teachable Machine (modelo local) |
+| Filtros artísticos | Canvas API (manipulación de píxeles) |
+| Base de datos | Supabase (PostgreSQL + RLS) |
+| Storage imágenes | Supabase Storage (bucket público `artworks`) |
+| Hosting | Netlify — https://cerulean-concha-cef704.netlify.app |
 
-HTML, CSS y JavaScript vanilla, sin build step. Las únicas dependencias se
-cargan desde CDN:
-
-- `@tensorflow/tfjs` y `@teachablemachine/image` — para correr el clasificador
-  Foto/Dibujo en el navegador.
-- `@supabase/supabase-js` — base de datos (Postgres) y Storage para guardar las
-  obras.
-
-El modelo del clasificador vive en `model/` (model.json + weights.bin de ~2 MB),
-exportado desde Teachable Machine.
-
-## Estructura
-
-```
-mambaq0.4/
-├── index.html              Punto de entrada con las 11 pantallas
-├── README.md
-├── css/
-│   └── styles.css          Sistema visual y responsive
-├── js/
-│   ├── config.js           Credenciales de Supabase (editar antes de correr)
-│   ├── db.js               Capa de persistencia (Supabase)
-│   ├── app.js              Navegación, estado, login, formulario
-│   ├── camera.js           Captura de imagen y clasificador IA
-│   └── museo.js            Galería del museo
-├── model/                  Modelo Teachable Machine (Foto vs Dibujo)
-├── assets/                 Imágenes de muestra para la galería
-└── supabase/
-    └── schema.sql          SQL para crear tablas, vista y políticas
-```
-
-## Configurar Supabase
-
-1. Crear un proyecto en [supabase.com](https://supabase.com). Plan Free es
-   suficiente. Región recomendada: São Paulo.
-2. Ir a `SQL Editor → New query`, pegar el contenido de
-   `supabase/schema.sql` y correrlo. Crea las tablas `children`, `artworks`,
-   `likes`, la vista `artworks_with_likes` y las políticas RLS.
-3. Ir a `Storage → New bucket`, crear uno llamado **`artworks`** y marcarlo
-   como `Public`.
-4. En `Project Settings → API` copiar el `Project URL` y el `anon public` key.
-5. Pegarlos en `js/config.js`:
-
-   ```js
-   window.MAMBAQ_CONFIG = {
-     supabaseUrl:     "https://xxxxx.supabase.co",
-     supabaseAnonKey: "eyJ...",
-   };
-   ```
-
-El anon key es público por diseño en Supabase — no es un secreto, RLS protege
-los datos. Aún así, no commitees credenciales reales si el repo va a ser
-público sin revisar las políticas.
-
-## Correr en local
-
-La app es estática. Lo más simple:
-
-```bash
-python -m http.server 8000
-```
-
-Y abrir `http://localhost:8000`. Servir por HTTP (no `file://`) evita problemas
-con la SDK de Supabase y con el cargado del modelo TensorFlow.
-
-También funciona con cualquier servidor estático: `npx serve`, Live Server de
-VS Code, etc.
+---
 
 ## Estilos artísticos disponibles
 
-## Probar el flujo
+Cada estilo aplica algoritmos específicos sobre los píxeles de la imagen:
 
-1. Primera carga: pantalla de login. Escribir un nombre, elegir un avatar,
-   tocar `¡Soy yo!`.
-2. Home con saludo personalizado. Tocar `¡Comenzar!`.
-3. Tomar o subir una imagen. La IA dice si es dibujo o foto.
-4. Llenar el formulario, escoger estilo, continuar.
-5. La obra queda guardada en Supabase. En el Museo aparece junto a las seis
-   obras de muestra.
-6. Recargar la página: la sesión persiste, las obras también.
+| Estilo | Algoritmo aplicado |
+|---|---|
+| 🌟 Van Gogh | Saturación extrema + blur direccional + bordes coloreados |
+| 🔷 Picasso | Posterización + Sobel edges gruesos + rotación de tono |
+| 🌸 Monet | Múltiples capas de blur suave + paleta pastel + luz difusa |
+| 🌺 Frida Kahlo | Saturación 3.8× + shift a rojos + viñeta dramática |
+| 🏺 Da Vinci | Escala de grises + sepia + sfumato + líneas de boceto |
 
-## Estado del proyecto
+---
 
-Prototipo en desarrollo activo. No usar con datos reales de menores fuera de
-un entorno controlado de pruebas — la autenticación es deliberadamente simple
-(solo nombre + avatar) porque el objetivo es la facilidad de uso para niños,
-no la protección de identidad.
+## Estructura del proyecto
+
+```
+mambaq0.4/
+├── index.html              Punto de entrada (11 pantallas en un solo HTML)
+├── css/
+│   └── styles.css          Sistema visual, mobile-first, safe-area notch
+├── js/
+│   ├── config.js           Credenciales de Supabase
+│   ├── db.js               Capa de datos (Supabase + rate limiting)
+│   ├── filters.js          Filtros artísticos con canvas (manipulación píxeles)
+│   ├── app.js              Navegación, estado global, login, formulario
+│   ├── camera.js           Cámara en vivo (getUserMedia) + clasificador IA
+│   └── museo.js            Galería pública del museo
+├── model/                  Modelo Teachable Machine (Foto vs Dibujo, ~2 MB)
+├── assets/                 Imágenes de muestra para la galería
+└── supabase/
+    └── schema.sql          Tablas, vista, RLS y políticas de Storage
+```
+
+---
+
+## Base de datos (Supabase)
+
+### Tablas
+
+```sql
+children   — niños registrados (id uuid, name, avatar, created_at, last_seen_at)
+artworks   — obras registradas (id, child_id, name, author, age, style_key,
+             style_label, color, filter, emoji, image_url, image_path, created_at)
+likes      — relación niño ↔ obra, unique por par
+```
+
+### Vista
+
+```sql
+artworks_with_likes — artworks + conteo de likes derivado
+```
+
+### RLS
+
+Lectura e inserción abiertas (museo público). Delete permitido en las tres tablas.
+Update en `children` (last_seen_at) y `artworks` (image_url post-upload).
+
+---
+
+## Configurar y correr
+
+### 1. Supabase
+
+1. Crear proyecto en [supabase.com](https://supabase.com) (plan Free).
+2. SQL Editor → New query → pegar `supabase/schema.sql` → Run.
+3. Storage → New bucket → nombre: **`artworks`** → marcar como Public.
+4. Project Settings → API → copiar **Project URL** y **anon public key**.
+5. Pegar en `js/config.js`:
+
+```js
+window.MAMBAQ_CONFIG = {
+  supabaseUrl:     "https://xxxx.supabase.co",
+  supabaseAnonKey: "sb_publishable_...",
+};
+```
+
+> El anon key es seguro en código público — las políticas RLS protegen los datos.
+
+### 2. Correr en local
+
+```bash
+python -m http.server 8000
+# abrir http://localhost:8000
+```
+
+Requiere HTTP (no `file://`) para que funcionen Supabase SDK y TensorFlow.js.
+
+### 3. Deploy a Netlify
+
+```bash
+npm install -g netlify-cli
+netlify login
+netlify deploy --dir . --prod
+```
+
+---
+
+## Seguridad implementada
+
+| Medida | Dónde |
+|---|---|
+| Rate limiting por dispositivo (3 usuarios / 15 obras por hora) | db.js |
+| Verificación obligatoria de IA antes de registrar obra | camera.js + app.js |
+| Auto-redimensionado de imágenes a máx 1200px (evita abuso de Storage) | camera.js |
+| Filtro de palabras inapropiadas en nombres | app.js |
+| Escape de HTML en galería (previene XSS) | museo.js |
+| Usuarios del dispositivo en localStorage (privacidad multi-dispositivo) | db.js |
+| RLS en todas las tablas | Supabase |
+| safe-area-inset para notch/barra home | styles.css |
+
+---
+
+## Flujo de pantallas
+
+```
+Login → Home → Cámara → (IA clasifica) → Formulario → Preview → Processing → Resultado → Éxito → Museo
+```
+
+---
 
 ## Equipo
 
-Universidad Simón Bolívar — Barranquilla
+Universidad Simón Bolívar — Barranquilla  
 Ingeniería de Sistemas

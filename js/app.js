@@ -278,11 +278,17 @@ function renderResult() {
   const style = STYLES[styleKey] || STYLES.vangogh;
 
   const img = document.getElementById("result-img");
-  img.src          = state.captureDataUrl || "";
-  img.style.filter = style.filter;
+  // Usar imagen procesada con canvas; fallback a CSS filter si no está lista
+  if (state.filteredDataUrl) {
+    img.src          = state.filteredDataUrl;
+    img.style.filter = "";
+  } else {
+    img.src          = state.captureDataUrl || "";
+    img.style.filter = style.filter;
+  }
 
   document.getElementById("result-style-circle").style.background = style.color;
-  document.getElementById("result-style-name").textContent        = style.label;
+  document.getElementById("result-style-name").textContent        = style.emoji + " " + style.label;
 }
 
 function renderSuccess() {
@@ -322,8 +328,8 @@ async function registerArtwork() {
       styleKey,
       style:    style.label,
       color:    style.color,
-      filter:   style.filter,
-      imgSrc:   state.captureDataUrl,
+      filter:   "",
+      imgSrc:   state.filteredDataUrl || state.captureDataUrl,
       emoji:    "✨",
     });
     await go("success");

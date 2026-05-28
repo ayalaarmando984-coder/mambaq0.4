@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ── Procesamiento ─────────────────────────────────────────────────────────────
 let processingInterval = null;
 
-function startProcessing() {
+async function startProcessing() {
   const { styleKey } = state.form;
   const style = STYLES[styleKey] || STYLES.vangogh;
 
@@ -263,16 +263,34 @@ function startProcessing() {
   bar.style.width = "0%";
 
   if (state.captureDataUrl) {
-    before.src = state.captureDataUrl; before.style.filter = ""; before.classList.remove("hidden");
-    after.src  = state.captureDataUrl; after.style.filter  = style.filter; after.classList.add("hidden");
+    before.src = state.captureDataUrl;
+    before.style.filter = "";
+    before.classList.remove("hidden");
+    after.classList.add("hidden");
   }
   lbl.textContent = `Aplicando estilo ${style.label}…`;
+
+  // Correr el filtro de canvas en paralelo con la barra de progreso
+  let filterDone = false;
+  state.filteredDataUrl = null;
+
+  applyArtisticFilter(state.captureDataUrl, styleKey).then(result => {
+    state.filteredDataUrl = result;
+    filterDone = true;
+    if (after) { after.src = result; after.style.filter = ""; }
+  }).catch(() => {
+    filterDone = true;
+    // Fallback a CSS filter si el canvas falla
+    if (after) { after.src = state.captureDataUrl; after.style.filter = style.filter; }
+  });
 
   let progress = 0;
   if (processingInterval) clearInterval(processingInterval);
   processingInterval = setInterval(() => {
-    progress += 3;
-    bar.style.width = Math.min(progress, 100) + "%";
+    // Limitar a 85% hasta que el filtro termine
+    const cap = filterDone ? 100 : 85;
+    progress = Math.min(progress + 3, cap);
+    bar.style.width = progress + "%";
     if (progress >= 50) { before.classList.add("hidden"); after.classList.remove("hidden"); }
     if (progress >= 100) {
       clearInterval(processingInterval); processingInterval = null;
