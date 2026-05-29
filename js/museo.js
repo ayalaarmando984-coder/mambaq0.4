@@ -197,26 +197,38 @@ async function renderArtworkDetail(art) {
   }
 }
 
+let _likeInProgress = false;
+
 async function toggleArtworkLike() {
+  if (_likeInProgress) return;
   const art = state.selectedArtwork;
   if (!art) return;
   if (!state.currentUser) { alert("Primero entra como pequeño artista 💛"); return; }
 
+  const likeBtn   = document.getElementById("artwork-like-btn");
+  const likeCount = document.getElementById("artwork-like-count");
+
   if (art.isSample) {
-    // Las muestras no están en DB — like solo en memoria
-    art.likes = (art.likes || 0) + 1;
-    document.getElementById("artwork-like-count").textContent = art.likes;
-    document.getElementById("artwork-like-btn").classList.add("liked");
+    const isLiked = likeBtn.classList.contains("liked");
+    art.likes = Math.max(0, (art.likes || 0) + (isLiked ? -1 : +1));
+    likeCount.textContent = art.likes;
+    likeBtn.classList.toggle("liked", !isLiked);
     return;
   }
+
+  _likeInProgress = true;
+  if (likeBtn) likeBtn.disabled = true;
 
   try {
     const nowLiked = await db.likes.toggle(state.currentUser.id, art.id);
     art.likes = Math.max(0, (art.likes || 0) + (nowLiked ? +1 : -1));
-    document.getElementById("artwork-like-count").textContent = art.likes;
-    document.getElementById("artwork-like-btn").classList.toggle("liked", nowLiked);
+    likeCount.textContent = art.likes;
+    likeBtn.classList.toggle("liked", nowLiked);
   } catch (e) {
     console.error(e);
     alert("No se pudo guardar el me gusta.");
+  } finally {
+    _likeInProgress = false;
+    if (likeBtn) likeBtn.disabled = false;
   }
 }
