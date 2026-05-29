@@ -14,6 +14,23 @@ Proyecto académico — Universidad Simón Bolívar, Barranquilla (Ingeniería d
 4. Elige el estilo de un maestro: Van Gogh, Picasso, Monet, Frida Kahlo o Da Vinci.
 5. Un filtro artístico real (manipulación de píxeles con canvas) transforma la imagen.
 6. La obra queda registrada en Supabase y visible en el Museo Interactivo.
+7. El artista puede ver sus obras desde el Home y eliminar las propias cuando quiera.
+
+---
+
+## Funcionalidades destacadas
+
+### Mis obras
+Cada niño ve un carrusel con sus obras registradas directamente en el Home, con acceso rápido al detalle completo de cada una (imagen, estilo, autor, likes).
+
+### Museo Interactivo
+Galería pública con todas las obras. Filtros por **Todas**, **Recientes** y **Populares**. Cualquier visitante puede dar o quitar like a las obras.
+
+### Borrar obra propia
+El autor de una obra ve un botón 🗑️ en el detalle. Al borrar, se elimina tanto el registro en la base de datos como el archivo de imagen en Supabase Storage.
+
+### Clasificador IA
+Modelo Teachable Machine entrenado para distinguir dibujos de fotografías. Solo los dibujos verificados pueden registrarse en el museo.
 
 ---
 
@@ -132,14 +149,15 @@ netlify deploy --dir . --prod
 
 | Medida | Dónde |
 |---|---|
-| Rate limiting por dispositivo (3 usuarios / 15 obras por hora) | db.js |
-| Verificación obligatoria de IA antes de registrar obra | camera.js + app.js |
-| Auto-redimensionado de imágenes a máx 1200px (evita abuso de Storage) | camera.js |
-| Filtro de palabras inapropiadas en nombres | app.js |
-| Escape de HTML en galería (previene XSS) | museo.js |
-| Usuarios del dispositivo en localStorage (privacidad multi-dispositivo) | db.js |
-| RLS en todas las tablas | Supabase |
-| safe-area-inset para notch/barra home | styles.css |
+| Rate limiting por dispositivo (3 usuarios / 15 obras por hora) | `db.js` |
+| Verificación obligatoria de IA antes de registrar obra | `camera.js` + `app.js` |
+| Auto-redimensionado de imágenes a máx 1200px (evita abuso de Storage) | `camera.js` |
+| Filtro de palabras inapropiadas en nombres | `app.js` |
+| Escape de HTML en galería (previene XSS) | `museo.js` |
+| Usuarios del dispositivo en localStorage (privacidad multi-dispositivo) | `db.js` |
+| Borrado de obra restringido al autor (validación en cliente + RLS) | `app.js` + Supabase |
+| RLS en todas las tablas y bucket de Storage | Supabase |
+| safe-area-inset para notch/barra home | `styles.css` |
 
 ---
 
@@ -147,6 +165,8 @@ netlify deploy --dir . --prod
 
 ```
 Login → Home → Cámara → (IA clasifica) → Formulario → Preview → Processing → Resultado → Éxito → Museo
+                ↑                                                                                      |
+                └──────────────────────── Mis obras (acceso directo desde Home) ──────────────────────┘
 ```
 
 ---
@@ -155,3 +175,9 @@ Login → Home → Cámara → (IA clasifica) → Formulario → Preview → Pro
 
 Universidad Simón Bolívar — Barranquilla  
 Ingeniería de Sistemas
+
+---
+
+## Demo en vivo
+
+🌐 **https://cerulean-concha-cef704.netlify.app**
