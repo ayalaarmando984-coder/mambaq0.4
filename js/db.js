@@ -59,6 +59,7 @@ function _toArtwork(row) {
     filter:    row.filter,
     emoji:     row.emoji || "✨",
     imgSrc:    row.image_url || null,
+    imagePath: row.image_path || null,
     likes:     row.likes || 0,
     createdAt: row.created_at,
   };
@@ -174,7 +175,10 @@ const artworksAPI = {
     return { ..._toArtwork(data), likes: 0 };
   },
 
-  async delete(id) {
+  async delete(id, imagePath) {
+    if (imagePath) {
+      await _client().storage.from("artworks").remove([imagePath]);
+    }
     const { error } = await _client().from("artworks").delete().eq("id", id);
     if (error) throw error;
   },

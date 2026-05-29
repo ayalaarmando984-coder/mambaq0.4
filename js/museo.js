@@ -189,6 +189,12 @@ async function renderArtworkDetail(art) {
     }
     likeBtn.classList.toggle("liked", liked);
   }
+
+  const deleteBtn = document.getElementById("artwork-delete-btn");
+  if (deleteBtn) {
+    const isOwner = state.currentUser && !art.isSample && art.childId === state.currentUser.id;
+    deleteBtn.style.display = isOwner ? "flex" : "none";
+  }
 }
 
 async function toggleArtworkLike() {

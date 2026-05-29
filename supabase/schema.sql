@@ -103,3 +103,7 @@ create policy "public read artworks bucket"
 create policy "anon upload artworks bucket"
   on storage.objects for insert
   with check (bucket_id = 'artworks');
+drop policy if exists "anon delete artworks bucket" on storage.objects;
+create policy "anon delete artworks bucket"
+  on storage.objects for delete
+  using (bucket_id = 'artworks');

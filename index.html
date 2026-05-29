@@ -408,9 +408,10 @@
             Estilo: <span class="style-badge" id="artwork-detail-style"></span>
           </div>
         </div>
-        <div style="display:flex;gap:10px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-ghost" id="artwork-like-btn" onclick="toggleArtworkLike()" style="flex:1">❤️ <span id="artwork-like-count">0</span></button>
           <button class="btn-secondary" onclick="shareArtwork()" style="flex:1">↗ Compartir</button>
+          <button class="btn-danger" id="artwork-delete-btn" onclick="deleteArtwork()" style="flex:1;display:none">🗑️ Borrar</button>
         </div>
       </div>
     </div>

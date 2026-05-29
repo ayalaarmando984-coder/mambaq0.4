@@ -825,6 +825,26 @@ body {
   color: var(--warm-gray);
 }
 
+/* ── Botón peligro (borrar) ──────────────────────────────────────────────── */
+.btn-danger {
+  background: #e05050;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  touch-action: manipulation;
+  user-select: none;
+}
+.btn-danger:hover  { background: #c0392b; }
+.btn-danger:active { transform: scale(0.96); }
+
 /* ── Like button activo ──────────────────────────────────────────────────── */
 .btn-ghost.liked {
   background: #fde8e8;

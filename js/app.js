@@ -202,7 +202,7 @@ async function renderHomeRecents() {
   mine.slice(0, 6).forEach(art => {
     const div = document.createElement("div");
     div.className = "recent-thumb";
-    div.onclick = () => { state.selectedArtwork = art; go("artwork"); };
+    div.onclick = () => openArtwork(art);
     div.innerHTML = art.imgSrc
       ? `<img class="recent-thumb-img" src="${art.imgSrc}" style="filter:${art.filter}" alt="${art.name}"/>
          <div class="recent-label">${art.name}</div>`
@@ -404,5 +404,25 @@ function shareArtwork() {
     navigator.share({ title, text }).catch(() => {});
   } else {
     alert("Compartir no está disponible en este dispositivo.");
+  }
+}
+
+async function deleteArtwork() {
+  const art = state.selectedArtwork;
+  if (!art || !state.currentUser || art.isSample) return;
+  if (art.childId !== state.currentUser.id) return;
+
+  if (!confirm("¿Borrar esta obra? No se puede deshacer.")) return;
+
+  showLoader("Borrando obra…");
+  try {
+    await db.artworks.delete(art.id, art.imagePath);
+    state.selectedArtwork = null;
+    await go("home");
+  } catch (e) {
+    console.error(e);
+    alert("No se pudo borrar la obra. Inténtalo de nuevo.");
+  } finally {
+    hideLoader();
   }
 }
